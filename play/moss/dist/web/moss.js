@@ -6,13 +6,14 @@ import { Tilemap,           } from "../src/tilemap.js";
 import { damp, lerp } from "../src/math.js";
 
 export const TILE = 16;
-export const GRAV = 900, RUN = 110, RUN_MULT = 1.45, JUMP = 300, MAX_FALL = 420;
+export const GRAV = 900, RUN = 110, RUN_MULT = 1.45, JUMP = 330, MAX_FALL = 420;
 /** Gravity multiplier while rising with the jump key released (short hop). */
 export const SHORT_HOP = 2.4;
 
 // Legend: # ground, = one-way plank, ^ spikes, o coin, s slime, C checkpoint, P start, F flag.
-// Design rule: a ledge is at most 3 tiles above where you jump from (full jump peaks
-// at about 3.1 tiles); the reachability test in test/moss.test.ts checks every coin.
+// Design rule: a ledge is at most 3 tiles above where you jump from. A full jump peaks
+// at about 3.8 tiles, so there is real margin; test/moss.test.ts proves every coin is
+// reachable even with a jump 5% weaker than this, so nothing needs a pixel-perfect jump.
 export const LEVEL = [
   "                                                                                                                                ",
   "                                                                                                                                ",
@@ -67,14 +68,14 @@ export function entities()           {
                                                                                    
 
 /** One fixed step of player movement: run, coyote time, jump buffer, variable jump height. */
-export function stepPlayer(P       , c          , map         , dt        )             {
+export function stepPlayer(P       , c          , map         , dt        , jumpSpeed = JUMP)             {
   const target = c.x * RUN * (c.run ? RUN_MULT : 1);
   P.vx = lerp(P.vx, target, damp(P.grounded ? 18 : 8, dt));
   if (Math.abs(c.x) > 0.1) P.face = Math.sign(c.x);
   P.coyote = P.grounded ? 0.1 : Math.max(0, P.coyote - dt);
   P.buffer = c.jumpPressed ? 0.12 : Math.max(0, P.buffer - dt);
   let jumped = false;
-  if (P.buffer > 0 && P.coyote > 0) { P.vy = -JUMP; P.buffer = P.coyote = 0; jumped = true; }
+  if (P.buffer > 0 && P.coyote > 0) { P.vy = -jumpSpeed; P.buffer = P.coyote = 0; jumped = true; }
   P.vy += GRAV * dt * (P.vy < 0 && !c.jumpHeld ? SHORT_HOP : 1);
   P.vy = Math.min(P.vy, MAX_FALL);
   const wasGrounded = P.grounded, fallSpeed = P.vy;

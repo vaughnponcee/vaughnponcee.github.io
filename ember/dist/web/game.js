@@ -117,6 +117,8 @@ for (let i = 0; i < 26; i++) {
   const a = rand() * Math.PI * 2, d = 6 + rand() * 13;
   crate([Math.cos(a) * d, 0.5 + rand() * 4, Math.sin(a) * d], 0.6 + rand() * 0.7);
 }
+// ?stress=N drops N extra crates in to measure scaling
+for (let i = 0; i < Number(params.get("stress") ?? 0); i++) crate([rand() * 36 - 18, 2 + rand() * 40, rand() * 36 - 18], 0.5 + rand() * 0.4);
 for (let i = 0; i < 6; i++) ball([rand() * 30 - 15, 3 + rand() * 3, rand() * 30 - 15], 0.35 + rand() * 0.35, [[0.85, 0.3, 0.25], [0.25, 0.45, 0.85], [0.9, 0.8, 0.3]][i % 3]        );
 // crystals: on the ground, the tower top and every island
 const gemSpots         = [[0, 3.8, 0], ...islands.map((p) => [p[0], p[1] + 1.3, p[2]]        )];
@@ -262,6 +264,7 @@ function updateCamera(dt        , focus      ) {
 }
 
 // ---- frame -------------------------------------------------------------
+let physMs = 0;
 let simTime = 0, last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0;
 const benchStats = { frames: 0, total: 0, render: 0 };
 const model = new Float32Array(16);
@@ -275,7 +278,9 @@ function frame(now        ) {
     savePrev();
     if (!BENCH) playerSystem(dt);
     moverSystem(simTime, dt);
+    const pt = performance.now();
     phys.step(dt);
+    physMs = physMs * 0.9 + (performance.now() - pt) * 0.1;
     triggerSystem();
     landingFx();
     world.flush();
@@ -349,7 +354,7 @@ function frame(now        ) {
     benchStats.frames++;
     benchStats.render += frameMs;
     (window                                       ).benchResult = {
-      frames: benchStats.frames, cpuMsPerFrame: +(benchStats.render / benchStats.frames).toFixed(3),
+      frames: benchStats.frames, physicsMs: +physMs.toFixed(3), cpuMsPerFrame: +(benchStats.render / benchStats.frames).toFixed(3),
       draws: R.stats.draws, instances: R.stats.instances, bodies: phys.bodies.length, sleeping: phys.stats.sleeping,
     };
   }

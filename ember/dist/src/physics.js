@@ -28,6 +28,8 @@
                     
                     
                      
+                                                    
+               
                  
  
 
@@ -129,6 +131,9 @@ export class PhysicsWorld {
   triggerEvents            = [];
   stats = { pairs: 0, contacts: 0, sleeping: 0 };
           nextId = 1;
+          grid = new Map                  ();
+          box = new Float64Array(0);
+          cmin = new Int32Array(0);
 
   add(o             )       {
     const b       = {
@@ -146,6 +151,7 @@ export class PhysicsWorld {
       grounded: false,
       sleeping: false,
       sleepTimer: 0,
+      slot: 0,
       user: o.user,
     };
     this.bodies.push(b);
@@ -161,42 +167,64 @@ export class PhysicsWorld {
 
   /** Candidate pairs from a uniform grid. Each pair appears once. */
   broadphase()                 {
-    const grid = new Map                ();
+    const grid = this.grid;
+    for (const list of grid.values()) list.length = 0;
+    if (grid.size > 20000) grid.clear(); // bodies spread far apart: drop stale cells
     const inv = 1 / this.cell;
     const pairs                 = [];
-    const seen = new Set        ();
-    for (const b of this.bodies) {
-      const [x0, y0, z0, x1, y1, z1] = aabbOf(b);
-      const ax = Math.floor(x0 * inv), ay = Math.floor(y0 * inv), az = Math.floor(z0 * inv);
-      const bx = Math.floor(x1 * inv), by = Math.floor(y1 * inv), bz = Math.floor(z1 * inv);
-      // huge statics (floors) would fill thousands of cells; test them against everyone instead
-      if ((bx - ax + 1) * (by - ay + 1) * (bz - az + 1) > 64) {
-        for (const o of this.bodies) if (o !== b) this.pushPair(b, o, pairs, seen);
-        continue;
+    const n = this.bodies.length;
+    if (this.box.length < n * 6) { this.box = new Float64Array(n * 12); this.cmin = new Int32Array(n * 6); }
+    const box = this.box, cmin = this.cmin;
+    const big           = [];
+    for (let i = 0; i < n; i++) {
+      const b = this.bodies[i];
+      b.slot = i;
+      const p = b.pos, o = i * 6;
+      if (b.shape.kind === "sphere") {
+        const r = b.shape.r;
+        box[o] = p[0] - r; box[o + 1] = p[1] - r; box[o + 2] = p[2] - r; box[o + 3] = p[0] + r; box[o + 4] = p[1] + r; box[o + 5] = p[2] + r;
+      } else {
+        const h = b.shape.half;
+        box[o] = p[0] - h[0]; box[o + 1] = p[1] - h[1]; box[o + 2] = p[2] - h[2]; box[o + 3] = p[0] + h[0]; box[o + 4] = p[1] + h[1]; box[o + 5] = p[2] + h[2];
       }
+    }
+    for (let i = 0; i < n; i++) {
+      const b = this.bodies[i], o = i * 6;
+      const ax = Math.floor(box[o] * inv), ay = Math.floor(box[o + 1] * inv), az = Math.floor(box[o + 2] * inv);
+      const bx = Math.floor(box[o + 3] * inv), by = Math.floor(box[o + 4] * inv), bz = Math.floor(box[o + 5] * inv);
+      cmin[i * 3] = ax; cmin[i * 3 + 1] = ay; cmin[i * 3 + 2] = az;
+      // huge bodies (floors) would fill thousands of cells; handled separately below
+      if ((bx - ax + 1) * (by - ay + 1) * (bz - az + 1) > 64) { big.push(i); continue; }
       for (let x = ax; x <= bx; x++)
         for (let y = ay; y <= by; y++)
           for (let z = az; z <= bz; z++) {
-            const k = x + "," + y + "," + z;
+            const k = (Math.imul(x, 73856093) ^ Math.imul(y, 19349663) ^ Math.imul(z, 83492791)) | 0;
             let list = grid.get(k);
             if (!list) { list = []; grid.set(k, list); }
-            for (const o of list) this.pushPair(b, o, pairs, seen);
-            list.push(b);
+            for (let m = 0; m < list.length; m++) {
+              const j = list[m];
+              // report each pair once: only from the lowest cell both bodies share
+              if (Math.max(ax, cmin[j * 3]) !== x || Math.max(ay, cmin[j * 3 + 1]) !== y || Math.max(az, cmin[j * 3 + 2]) !== z) continue;
+              this.tryPair(b, this.bodies[j], pairs);
+            }
+            list.push(i);
           }
+    }
+    for (const i of big) {
+      const b = this.bodies[i];
+      for (let j = 0; j < n; j++) if (j !== i && !(big.includes(j) && j < i)) this.tryPair(b, this.bodies[j], pairs);
     }
     return pairs;
   }
 
-          pushPair(a      , b      , out                , seen             ) {
+          tryPair(a      , b      , out                ) {
     if (a.invMass === 0 && b.invMass === 0) return;
     if (a.sleeping && b.sleeping) return;
     if (a.invMass === 0 && b.sleeping) return;
     if (b.invMass === 0 && a.sleeping) return;
     if (!((a.layer & b.mask) && (b.layer & a.mask))) return;
-    const lo = Math.min(a.id, b.id), hi = Math.max(a.id, b.id);
-    const key = lo * 1048576 + hi;
-    if (seen.has(key)) return;
-    seen.add(key);
+    const box = this.box, p = a.slot * 6, q = b.slot * 6;
+    if (box[p] > box[q + 3] || box[q] > box[p + 3] || box[p + 1] > box[q + 4] || box[q + 1] > box[p + 4] || box[p + 2] > box[q + 5] || box[q + 2] > box[p + 5]) return;
     out.push([a, b]);
   }
 

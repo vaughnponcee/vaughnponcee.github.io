@@ -7,7 +7,7 @@
  * hemisphere ambient, up to 8 point lights, exponential height fog, ACES
  * tonemapping and sRGB output. Emissive instances bypass lighting.
  */
-import {                       frustumPlanes, invert, lookAt, multiply, normalize, ortho, perspective, sphereInFrustum } from "./math.js";
+import {                       frustumPlanes, invert, lookAt, multiply, normalize, ortho, perspective } from "./math.js";
 import {                STRIDE } from "./mesh.js";
 
                                                                                                                                    
@@ -136,7 +136,14 @@ function compile(gl                        , vs        , fs        )            
   return p;
 }
 
-                                                                              
+                                                                                                                                   
+
+function grow(a              , need        )               {
+  if (need <= a.length) return a;
+  const g = new Float32Array(Math.max(need, a.length * 2));
+  g.set(a);
+  return g;
+}
 
 export class Renderer {
            gl                        ;
@@ -147,7 +154,7 @@ export class Renderer {
   ground       = [0.3, 0.26, 0.22];
   fogDensity = 0.0065;
   exposure = 1.0;
-  ambient = 2.6;
+  ambient = 2.0;
   shadowSize = 2048;
   shadowExtent = 34;
   lights               = [];
@@ -241,17 +248,32 @@ export class Renderer {
    */
   draw(mesh      , model      , color      , o                                                                                             = {})       {
     let b = this.batches.get(mesh.id);
-    if (!b) { b = { mesh, data: [], count: 0, shadow: false }; this.batches.set(mesh.id, b); }
-    const pos       = [model[12], model[13], model[14]];
-    const r = mesh.radius * (o.scale ?? Math.max(Math.hypot(model[0], model[1], model[2]), Math.hypot(model[4], model[5], model[6]), Math.hypot(model[8], model[9], model[10])));
-    const visible = sphereInFrustum(this.planes, pos, r);
+    if (!b) {
+      b = { mesh, vis: new Float32Array(INST_FLOATS * 64), nVis: 0, cast: new Float32Array(INST_FLOATS * 64), nCast: 0, visOff: 0, castOff: 0 };
+      this.batches.set(mesh.id, b);
+    }
+    const sc = o.scale ?? Math.max(
+      Math.sqrt(model[0] * model[0] + model[1] * model[1] + model[2] * model[2]),
+      Math.sqrt(model[4] * model[4] + model[5] * model[5] + model[6] * model[6]),
+      Math.sqrt(model[8] * model[8] + model[9] * model[9] + model[10] * model[10]));
+    const r = mesh.radius * sc;
+    const p = this.planes, x = model[12], y = model[13], z = model[14];
+    let visible = true;
+    for (let i = 0; i < 24; i += 4) if (p[i] * x + p[i + 1] * y + p[i + 2] * z + p[i + 3] < -r) { visible = false; break; }
+    const casts = o.shadow ?? true;
     if (!visible) this.stats.culled++;
-    if (!visible && !(o.shadow ?? true)) return;
-    // invisible casters still go to the shadow pass; flag via negative alpha
-    for (let i = 0; i < 16; i++) b.data.push(model[i]);
-    b.data.push(color[0], color[1], color[2], visible ? 1 : -1);
-    b.data.push(o.emissive ?? 0, o.rough ?? 0.6, o.checker ? 1 : 0, (o.shadow ?? true) ? 1 : 0);
-    b.count++;
+    const em = o.emissive ?? 0, ro = o.rough ?? 0.6, ch = o.checker ? 1 : 0;
+    if (visible) {
+      b.vis = grow(b.vis, (b.nVis + 1) * INST_FLOATS);
+      const k = b.nVis++ * INST_FLOATS, d = b.vis;
+      d.set(model, k);
+      d[k + 16] = color[0]; d[k + 17] = color[1]; d[k + 18] = color[2]; d[k + 19] = 1;
+      d[k + 20] = em; d[k + 21] = ro; d[k + 22] = ch; d[k + 23] = 0;
+    }
+    if (casts && em === 0) {
+      b.cast = grow(b.cast, (b.nCast + 1) * INST_FLOATS);
+      b.cast.set(model, b.nCast++ * INST_FLOATS); // shadow pass reads only the matrix
+    }
   }
 
           planes = new Float32Array(24);
@@ -263,17 +285,24 @@ export class Renderer {
     lookAt(cam.pos, cam.target, [0, 1, 0], this.view);
     multiply(this.proj, this.view, this.viewProj);
     this.planes = frustumPlanes(this.viewProj);
-    for (const b of this.batches.values()) { b.data.length = 0; b.count = 0; }
+    for (const b of this.batches.values()) { b.nVis = 0; b.nCast = 0; }
     this.stats.culled = 0;
+  }
+
+          frame = new Float32Array(INST_FLOATS * 256);
+
+  /** Re-point the bound VAO's per-instance attributes at a byte offset in the frame buffer. */
+          pointInstances(byteOff        ) {
+    const gl = this.gl;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
+    for (let k = 0; k < 6; k++) gl.vertexAttribPointer(3 + k, 4, gl.FLOAT, false, INST_FLOATS * 4, byteOff + k * 16);
   }
 
           upload(data              ) {
     const gl = this.gl;
     gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
-    if (data.byteLength > this.instCap) {
-      this.instCap = Math.max(data.byteLength, this.instCap * 2);
-      gl.bufferData(gl.ARRAY_BUFFER, this.instCap, gl.DYNAMIC_DRAW);
-    }
+    if (data.byteLength > this.instCap) this.instCap = Math.max(data.byteLength, this.instCap * 2);
+    gl.bufferData(gl.ARRAY_BUFFER, this.instCap, gl.STREAM_DRAW); // orphan: no wait on last frame's draws
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
   }
 
@@ -299,25 +328,21 @@ export class Renderer {
     gl.useProgram(this.shadowProg);
     gl.uniformMatrix4fv(this.loc(this.shadowProg, "uLightVP"), false, lightVP);
     gl.cullFace(gl.FRONT); // front-face culling reduces acne on closed meshes
-    const packed = new Map                                                                              ();
+    // pack every batch's casters and visible instances into one buffer, upload once
+    let total = 0;
+    for (const b of this.batches.values()) total += (b.nCast + b.nVis) * INST_FLOATS;
+    this.frame = grow(this.frame, total);
+    let off = 0;
     for (const b of this.batches.values()) {
-      if (!b.count) continue;
-      const all           = [], vis           = [];
-      for (let i = 0; i < b.count; i++) {
-        const o = i * INST_FLOATS;
-        const castShadow = b.data[o + 23] > 0, visible = b.data[o + 19] > 0;
-        const slice = b.data.slice(o, o + INST_FLOATS);
-        if (castShadow) all.push(...slice);
-        if (visible) { slice[19] = 1; vis.push(...slice); }
-      }
-      packed.set(b.mesh.id, { all: new Float32Array(all), vis: new Float32Array(vis), nAll: all.length / INST_FLOATS, nVis: vis.length / INST_FLOATS });
+      b.castOff = off; this.frame.set(b.cast.subarray(0, b.nCast * INST_FLOATS), off); off += b.nCast * INST_FLOATS;
+      b.visOff = off; this.frame.set(b.vis.subarray(0, b.nVis * INST_FLOATS), off); off += b.nVis * INST_FLOATS;
     }
+    this.upload(this.frame.subarray(0, total));
     for (const b of this.batches.values()) {
-      const p = packed.get(b.mesh.id);
-      if (!p || !p.nAll) continue;
-      this.upload(p.all);
+      if (!b.nCast) continue;
       gl.bindVertexArray(b.mesh.vao);
-      gl.drawElementsInstanced(gl.TRIANGLES, b.mesh.count, gl.UNSIGNED_SHORT, 0, p.nAll);
+      this.pointInstances(b.castOff * 4);
+      gl.drawElementsInstanced(gl.TRIANGLES, b.mesh.count, gl.UNSIGNED_SHORT, 0, b.nCast);
       draws++;
     }
     gl.cullFace(gl.BACK);
@@ -357,8 +382,12 @@ export class Renderer {
     gl.uniform1f(this.loc(m, "uExposure"), this.exposure);
     gl.uniform1f(this.loc(m, "uAmbient"), this.ambient);
     const lights = this.nearestLights(cam.target);
-    const lp = new Float32Array(MAX_LIGHTS * 4), lc = new Float32Array(MAX_LIGHTS * 3);
-    lights.forEach((l, i) => { lp.set([...l.pos, l.radius], i * 4); lc.set(l.color, i * 3); });
+    const lp = this.lp, lc = this.lc;
+    for (let i = 0; i < lights.length; i++) {
+      const l = lights[i];
+      lp[i * 4] = l.pos[0]; lp[i * 4 + 1] = l.pos[1]; lp[i * 4 + 2] = l.pos[2]; lp[i * 4 + 3] = l.radius;
+      lc[i * 3] = l.color[0]; lc[i * 3 + 1] = l.color[1]; lc[i * 3 + 2] = l.color[2];
+    }
     gl.uniform1i(this.loc(m, "uLightCount"), lights.length);
     gl.uniform4fv(this.loc(m, "uLightPos"), lp);
     gl.uniform3fv(this.loc(m, "uLightColor"), lc);
@@ -367,13 +396,12 @@ export class Renderer {
     gl.uniform1i(this.loc(m, "uShadowMap"), 0);
 
     for (const b of this.batches.values()) {
-      const p = packed.get(b.mesh.id);
-      if (!p || !p.nVis) continue;
-      this.upload(p.vis);
+      if (!b.nVis) continue;
       gl.bindVertexArray(b.mesh.vao);
-      gl.drawElementsInstanced(gl.TRIANGLES, b.mesh.count, gl.UNSIGNED_SHORT, 0, p.nVis);
+      this.pointInstances(b.visOff * 4);
+      gl.drawElementsInstanced(gl.TRIANGLES, b.mesh.count, gl.UNSIGNED_SHORT, 0, b.nVis);
       draws++;
-      instances += p.nVis;
+      instances += b.nVis;
     }
     gl.bindVertexArray(null);
     this.stats.draws = draws;
@@ -381,8 +409,13 @@ export class Renderer {
     this.stats.ms = performance.now() - t0;
   }
 
+          lp = new Float32Array(MAX_LIGHTS * 4);
+          lc = new Float32Array(MAX_LIGHTS * 3);
+
           nearestLights(focus      )               {
-    return this.lights
+    const live = this.lights.filter((l) => l.radius > 0);
+    if (live.length <= MAX_LIGHTS) return live;
+    return live
       .map((l) => ({ l, d: Math.hypot(l.pos[0] - focus[0], l.pos[1] - focus[1], l.pos[2] - focus[2]) - l.radius }))
       .sort((a, b) => a.d - b.d)
       .slice(0, MAX_LIGHTS)

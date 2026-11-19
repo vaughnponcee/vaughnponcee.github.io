@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ember editor</title>
+<style>
+  :root{--bg:#141518;--panel:#1b1d21;--panel2:#22252a;--line:#2d3036;--ink:#e6e6e6;--mute:#8b8f97;--acc:#f2c14e;--acc2:#4b8be3;--bad:#e36b5b;--ok:#6cc46a;
+    --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;--sans:ui-sans-serif,system-ui,"Segoe UI",sans-serif}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:13px/1.4 var(--sans);overflow:hidden}
+  button,select,input{font:inherit;color:inherit}
+  button{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap}
+  button:hover{border-color:#4a4e56}
+  button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  button.primary{background:var(--acc);color:#1a1a1a;border-color:var(--acc);font-weight:600}
+  body.playing #play{background:var(--bad);border-color:var(--bad);color:#fff}
+  input,select{background:#121316;border:1px solid var(--line);border-radius:5px;padding:4px 6px;min-width:0}
+  input[type=checkbox]{width:auto}
+  input[type=color]{padding:0;height:26px;width:100%}
+
+  header{height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .logo{font-weight:800;letter-spacing:.04em;margin-right:8px}
+  .tabs{display:flex;gap:2px;background:#101114;padding:3px;border-radius:8px;margin-right:6px}
+  .tabs button{border:0;background:none;color:var(--mute);padding:5px 14px}
+  .tabs button.on{background:var(--panel2);color:var(--ink)}
+  .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+  .grow{flex:1}
+  .tb{display:none;gap:6px;align-items:center}
+  body[data-tab=scene] .tb.scene,body[data-tab=sprites] .tb.sprites,body[data-tab=scripts] .tb.scripts{display:flex}
+  label.inline{display:flex;gap:5px;align-items:center;color:var(--mute)}
+
+  main{position:absolute;inset:46px 0 0 0}
+  .ws{position:absolute;inset:0;display:none;grid-template-columns:230px minmax(0,1fr) 280px}
+  body[data-tab=scene] .ws.scene,body[data-tab=sprites] .ws.sprites,body[data-tab=scripts] .ws.scripts{display:grid}
+  aside{background:var(--panel);border-right:1px solid var(--line);overflow:auto;display:flex;flex-direction:column;min-width:0}
+  aside.right{border-right:0;border-left:1px solid var(--line)}
+  h3{margin:0;padding:10px 12px 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);display:flex;justify-content:space-between}
+  ul{list-style:none;margin:0;padding:0 6px 10px}
+  li{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:5px;cursor:pointer}
+  li:hover{background:var(--panel2)}
+  li.sel{background:#2f3a52}
+  li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  li .kind{color:var(--mute);font-size:11px}
+  li canvas{width:24px;height:24px;image-rendering:pixelated;background:#2a2c31;border-radius:3px}
+  .sw{width:10px;height:10px;border-radius:3px;flex:none}
+
+  #view{position:relative;width:100%;height:100%;display:block;min-width:0}
+  .center{position:relative;min-width:0;overflow:hidden}
+  #inspector{padding:4px 12px 14px;display:grid;gap:8px}
+  .row{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;align-items:center;color:var(--mute)}
+  .vec{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+  .hint{color:var(--mute);padding:0 2px}
+  #console{position:absolute;left:0;right:0;bottom:0;max-height:30%;overflow:auto;margin:0;padding:8px 12px;background:#0d0e10e8;font:12px/1.5 var(--mono);color:#cfd3dc;white-space:pre-wrap;display:none;border-top:1px solid var(--line)}
+  body.playing #console:not(:empty){display:block}
+  #console.has-error{color:#ffb4a8}
+  .keys{padding:10px 12px;color:var(--mute);font-size:12px;line-height:1.7;border-top:1px solid var(--line);margin-top:auto}
+  kbd{font:11px var(--mono);border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--ink)}
+
+  /* sprites */
+  .paintwrap{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100%;min-height:0}
+  .tools{display:flex;gap:6px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  #palette{display:flex;flex-wrap:wrap;gap:3px}
+  .swatch{width:20px;height:20px;padding:0;border-radius:4px;border:2px solid transparent}
+  .swatch.on{border-color:#fff}
+  #paint{width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}
+  .timeline{border-top:1px solid var(--line);padding:8px 10px;background:var(--panel)}
+  .tl-bar{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+  #frames{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+  .fr{position:relative;padding:3px;border-radius:6px;flex:none}
+  .fr canvas{width:56px;height:56px;image-rendering:pixelated;display:block;background:#2a2c31;border-radius:3px}
+  .fr span{position:absolute;left:6px;top:4px;font:10px var(--mono);color:var(--mute)}
+  .fr.on{background:var(--acc);border-color:var(--acc)}
+  #preview{width:100%;aspect-ratio:1;display:block;image-rendering:pixelated;border-radius:6px}
+  .pv{padding:0 12px 10px}
+  #previewinfo{color:var(--mute);font:11px var(--mono);margin-top:4px}
+  .anim{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;margin:0 8px 6px;border:1px solid var(--line);border-radius:6px;cursor:pointer}
+  .anim .an{flex:1 1 100%}
+  .anim.on{border-color:var(--acc)}
+  .anim label{display:inline-flex;gap:4px;align-items:center;color:var(--mute);margin-right:6px}
+  .anim input[type=number]{width:46px}
+  .anim label{margin-right:0!important}
+  .anim .ax{margin-left:auto;padding:0 8px}
+  .libbtns{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 10px 10px}
+
+  /* scripts */
+  .codewrap{display:grid;grid-template-rows:auto minmax(0,1fr);height:100%}
+  .codebar{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
+  #script-name{font:600 13px var(--mono)}
+  #syntax{font:12px var(--mono)}
+  #syntax.ok{color:var(--ok)} #syntax.bad{color:var(--bad)}
+  #code{width:100%;height:100%;resize:none;border:0;outline:0;background:#101114;color:#dfe3ea;font:13px/1.55 var(--mono);padding:14px 16px;tab-size:2;white-space:pre}
+  .api{padding:4px 14px 20px;font-size:12px;color:#c3c7cf}
+  .api code{font:11.5px var(--mono);color:var(--acc)}
+  .api p{margin:6px 0}
+  .api h4{margin:14px 0 4px;color:var(--ink);font-size:12px}
+</style>
+</head>
+<body data-tab="scene">
+<header>
+  <span class="logo">ember</span>
+  <div class="tabs">
+    <button data-tabbtn="scene">Scene</button>
+    <button data-tabbtn="sprites">Sprites</button>
+    <button data-tabbtn="scripts">Scripts</button>
+  </div>
+  <div class="tb scene">
+    <button data-add="box">Box</button>
+    <button data-add="crate">Crate</button>
+    <button data-add="sphere">Ball</button>
+    <button data-add="cylinder">Pillar</button>
+    <button data-add="gem">Crystal</button>
+    <button data-add="light">Light</button>
+    <span class="sep"></span>
+    <button id="dup" title="Ctrl+D">Duplicate</button>
+    <button id="del" title="Delete">Delete</button>
+    <button id="undo" title="Ctrl+Z">Undo</button>
+    <button id="redo" title="Ctrl+Y">Redo</button>
+    <label class="inline"><input type="checkbox" id="snap" checked> Snap</label>
+  </div>
+  <div class="tb sprites"><span id="sp-name"></span></div>
+  <div class="tb scripts"><span class="hint">Scripts run when you press Play in the Scene tab.</span></div>
+  <span class="grow"></span>
+  <button id="new">New</button>
+  <button id="open">Open</button>
+  <button id="save">Save</button>
+  <input type="file" id="file" accept=".json" hidden>
+  <button id="play" class="primary" title="Ctrl+P">Play</button>
+</header>
+
+<main>
+  <section class="ws scene">
+    <aside>
+      <h3>Hierarchy <span id="count"></span></h3>
+      <ul id="list"></ul>
+      <div class="keys">
+        Click selects, drag moves (<kbd>Alt</kbd> for height)<br>
+        Right drag orbits, <kbd>Shift</kbd>+right pans, wheel zooms<br>
+        <kbd>F</kbd> focus &nbsp;<kbd>Del</kbd> delete &nbsp;arrows nudge
+      </div>
+    </aside>
+    <div class="center"><canvas id="view"></canvas><pre id="console"></pre></div>
+    <aside class="right">
+      <h3>Inspector</h3>
+      <div id="inspector"></div>
+    </aside>
+  </section>
+
+  <section class="ws sprites">
+    <aside>
+      <h3>Asset library</h3>
+      <ul id="library"></ul>
+      <div class="libbtns">
+        <button id="sp-new">New sprite</button>
+        <button id="sp-rename">Rename</button>
+        <button id="sp-import">Import</button>
+        <button id="sp-del">Delete</button>
+        <button id="sp-png">Export PNG</button>
+        <button id="sp-json">Export JSON</button>
+      </div>
+      <input type="file" id="sp-file" accept=".json" hidden>
+      <div class="keys">
+        <kbd>B</kbd> pencil <kbd>E</kbd> eraser <kbd>G</kbd> fill <kbd>I</kbd> pick<br>
+        Right click picks a colour<br>
+        <kbd>M</kbd> mirror <kbd>O</kbd> onion skin<br>
+        <kbd>[</kbd> <kbd>]</kbd> frames &nbsp;<kbd>N</kbd> new frame
+      </div>
+    </aside>
+    <div class="center paintwrap">
+      <div class="tools">
+        <button data-tool="pencil">Pencil</button>
+        <button data-tool="eraser">Eraser</button>
+        <button data-tool="fill">Fill</button>
+        <button data-tool="picker">Picker</button>
+        <span class="sep"></span>
+        <input type="color" id="color" style="width:34px">
+        <div id="palette"></div>
+        <span class="sep"></span>
+        <label class="inline"><input type="checkbox" id="mirror"> Mirror</label>
+        <label class="inline"><input type="checkbox" id="onion" checked> Onion skin</label>
+      </div>
+      <div style="min-height:0"><canvas id="paint"></canvas></div>
+      <div class="timeline">
+        <div class="tl-bar">
+          <strong id="frameinfo"></strong>
+          <span class="grow"></span>
+          <button id="fr-add" title="N">New frame</button>
+          <button id="fr-dup">Duplicate</button>
+          <button id="fr-left">Move left</button>
+          <button id="fr-right">Move right</button>
+          <button id="fr-flip">Flip</button>
+          <button id="fr-clear">Clear</button>
+          <button id="fr-del">Delete</button>
+        </div>
+        <div id="frames"></div>
+      </div>
+    </div>
+    <aside class="right">
+      <h3>Preview</h3>
+      <div class="pv"><canvas id="preview" width="240" height="240"></canvas><div id="previewinfo"></div></div>
+      <h3>Animations <button id="an-add">Add</button></h3>
+      <div id="anims"></div>
+    </aside>
+  </section>
+
+  <section class="ws scripts">
+    <aside>
+      <h3>Scripts</h3>
+      <ul id="scripts"></ul>
+      <div class="libbtns">
+        <button id="sc-new">New script</button>
+        <button id="sc-del">Delete</button>
+        <button id="sc-attach" style="grid-column:span 2">Attach to selected object</button>
+      </div>
+    </aside>
+    <div class="center codewrap">
+      <div class="codebar"><span id="script-name"></span><span id="syntax"></span></div>
+      <textarea id="code" spellcheck="false"></textarea>
+    </div>
+    <aside class="right">
+      <h3>Script API</h3>
+      <div class="api">
+        <h4>Lifecycle</h4>
+        <p><code>start(self, game)</code> once, before the first update</p>
+        <p><code>update(self, game, dt)</code> 60 times a second</p>
+        <p><code>onTrigger(self, other, game)</code> overlapping a trigger</p>
+        <p><code>onCollide(self, other, game)</code> touching a solid</p>
+        <p><code>onDestroy(self, game)</code></p>
+        <h4>self / other</h4>
+        <p><code>position</code> <code>velocity</code> <code>rotation</code> <code>scale</code> <code>color</code> read and write</p>
+        <p><code>grounded</code> <code>name</code> <code>tag</code> <code>alive</code></p>
+        <p><code>state</code> your variables for this object</p>
+        <p><code>push([x,y,z])</code> <code>destroy()</code> <code>distanceTo(o)</code></p>
+        <h4>game</h4>
+        <p><code>input.axes()</code> <code>input.held("KeyW")</code> <code>input.pressed("Space")</code></p>
+        <p><code>find(name)</code> <code>findAll(tag)</code></p>
+        <p><code>spawn({mesh, pos, size, color, body}, "script")</code></p>
+        <p><code>raycast(from, dir, max)</code></p>
+        <p><code>follow(obj, distance, height)</code> camera</p>
+        <p><code>sound.jump()</code> <code>pickup()</code> <code>pad()</code> <code>win()</code></p>
+        <p><code>print(text)</code> on screen, <code>log(...)</code> to console</p>
+        <p><code>state</code> shared by all scripts, <code>time</code> seconds</p>
+      </div>
+    </aside>
+  </section>
+</main>
+<script type="module" src="../dist/web/editor.js"></script>
+</body>
+</html>

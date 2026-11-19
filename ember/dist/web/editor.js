@@ -10,11 +10,17 @@
 import { Engine } from "../src/engine.js";
 import { World } from "../src/ecs.js";
 import { PhysicsWorld, rayBody,           } from "../src/physics.js";
-import {                                                             spawnScene, savePrevious, syncAndDraw } from "../src/scene.js";
+import {                                                             spawnScene, savePrevious, syncAndDraw, loadModels } from "../src/scene.js";
+import { parseModel, toBase64 } from "../src/gltf.js";
 import {            clamp, damp, fromTRS, lerp, normalize, quatFromEuler } from "../src/math.js";
 import { ScriptRuntime } from "../src/script.js";
 import { initSpriteEditor } from "./sprite-editor.js";
 import { setupScriptsTab } from "./scripts-tab.js";
+import { hydrateIcons, icon } from "./icons.js";
+import { Project } from "../src/project.js";
+import { Library } from "../src/assets.js";
+
+hydrateIcons();
 
 const $ =                        (id        ) => document.getElementById(id)     ;
 const canvas = $                   ("view");
@@ -90,7 +96,16 @@ let playing                                                                     
 function load()               {
   try { const s = localStorage.getItem(STORE); return s ? JSON.parse(s) : null; } catch { return null; }
 }
-function persist() { try { localStorage.setItem(STORE, JSON.stringify(scene)); } catch { /* storage unavailable */ } }
+let diskTimer = 0;
+const scenePath = () => `scenes/${(scene.name || "untitled").replace(/[^\w .-]/g, "_")}.json`;
+function persist() {
+  try { localStorage.setItem(STORE, JSON.stringify(scene)); } catch { /* storage unavailable */ }
+  // with a project open, the scene file on disk is kept current too
+  const p = Project.store;
+  if (!p) return;
+  clearTimeout(diskTimer);
+  diskTimer = setTimeout(() => { p.write(scenePath(), JSON.stringify(scene, null, 1)).catch((e) => toast("Save failed: " + e.message)); }, 500)                     ;
+}
 /** Call before any edit so it can be undone. */
 function checkpoint() {
   undo.push(JSON.stringify(scene));
@@ -205,7 +220,7 @@ const unhex = (h        )       => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 
                                                                                                                                                                                                                                                            
 const FIELDS          = [
   { key: "name", label: "Name", type: "text", get: (o) => o.name, set: (o, v) => (o.name = String(v)) },
-  { key: "mesh", label: "Mesh", type: "select", opts: ["box", "sphere", "cylinder", "gem", "plane"], get: (o) => o.mesh, set: (o, v) => (o.mesh = v            ) },
+  { key: "mesh", label: "Mesh", type: "select", opts: [], get: (o) => o.mesh, set: (o, v) => (o.mesh = v            ) },
   { key: "pos", label: "Position", type: "vec3", step: 0.5, get: (o) => o.pos, set: (o, v) => (o.pos = v        ) },
   { key: "size", label: "Size", type: "vec3", step: 0.25, get: (o) => o.size, set: (o, v) => (o.size = (v        ).map((x) => Math.max(0.05, x))        ) },
   { key: "yaw", label: "Rotation Y (deg)", type: "num", step: 15, get: (o) => Math.round(((o.yaw ?? 0) * 180) / Math.PI), set: (o, v) => (o.yaw = (Number(v) * Math.PI) / 180) },
@@ -215,6 +230,7 @@ const FIELDS          = [
   { key: "checker", label: "Checker pattern", type: "check", get: (o) => !!o.checker, set: (o, v) => (o.checker = !!v) },
   { key: "body", label: "Physics", type: "select", opts: ["static", "dynamic", "trigger", "none"], get: (o) => o.body ?? "static", set: (o, v) => (o.body = v            ) },
   { key: "mass", label: "Mass", type: "num", step: 0.5, get: (o) => o.mass ?? 1, set: (o, v) => (o.mass = Math.max(0.01, Number(v))), show: (o) => o.body === "dynamic" },
+  { key: "upright", label: "Keep upright", type: "check", get: (o) => !!o.upright, set: (o, v) => (o.upright = !!v || undefined), show: (o) => o.body === "dynamic" },
   { key: "bounce", label: "Bounce", type: "num", step: 0.1, get: (o) => o.bounce ?? 0.1, set: (o, v) => (o.bounce = clamp(Number(v), 0, 1)), show: (o) => o.body === "dynamic" },
   { key: "script", label: "Script", type: "select", opts: [], get: (o) => o.script ?? "(none)", set: (o, v) => (o.script = v === "(none)" ? undefined : String(v)) },
   { key: "tag", label: "Tag", type: "text", get: (o) => o.tag ?? "", set: (o, v) => (o.tag = String(v) || undefined) },
@@ -260,7 +276,9 @@ function fillInspector() {
       row.appendChild(box);
     } else if (f.type === "select") {
       const sel = document.createElement("select");
-      const opts = f.key === "script" ? ["(none)", ...Object.keys(scene.scripts ?? {})] : f.opts ;
+      const opts = f.key === "script" ? ["(none)", ...Object.keys(scene.scripts ?? {})]
+        : f.key === "mesh" ? ["box", "sphere", "cylinder", "gem", "plane", ...Object.keys(scene.models ?? {}).map((m) => `model:${m}`)]
+        : f.opts ;
       for (const op of opts) sel.add(new Option(op, op));
       sel.value = String(f.get(o));
       sel.onchange = () => commit(sel.value);
@@ -278,7 +296,48 @@ function fillInspector() {
   }
 }
 
-function refresh() { renderList(); fillInspector(); persist(); }
+function refresh() {
+  const bad = loadModels(scene, R, eng.meshes);
+  if (bad.length) console.warn("models skipped:", bad);
+  renderList(); fillInspector(); persist();
+}
+
+// ---- model import --------------------------------------------------------------
+const modelInput = document.createElement("input");
+modelInput.type = "file";
+modelInput.accept = ".glb,.gltf";
+modelInput.onchange = async () => {
+  const f = modelInput.files?.[0];
+  modelInput.value = "";
+  if (f) await importModel(await f.arrayBuffer(), f.name);
+};
+async function importModel(data             , filename        ) {
+  if (playing) return;
+  const f = { name: filename };
+  try {
+    const m = parseModel(data); // validate before storing
+    let name = f.name.replace(/\.(glb|gltf)$/i, "");
+    scene.models ??= {};
+    while (scene.models[name] && scene.models[name] !== toBase64(data)) name += "_";
+    checkpoint();
+    scene.models[name] = toBase64(data);
+    const s = 2 / Math.max(...m.size); // about 2 units across
+    scene.objects.push({ name, mesh: `model:${name}`, pos: [snapTo(orbit.target[0]), (m.size[1] * s) / 2, snapTo(orbit.target[2])],
+      size: m.size.map((v) => Math.round(v * s * 100) / 100)        , color: m.color, body: "static" });
+    selected = scene.objects.length - 1;
+    refresh();
+    toast(`Imported ${name}: ${m.triangles.toLocaleString()} triangles`);
+  } catch (e) {
+    alert("Could not import model: " + (e         ).message);
+  }
+}
+function toast(t        ) {
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.textContent = t;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
 
 function add(kind        ) {
   if (playing) return;
@@ -331,14 +390,14 @@ function play() {
   playing = { world, phys, snapshot: JSON.stringify(scene), rt };
   $("console").textContent = "";
   document.body.classList.add("playing");
-  $("play").textContent = "Stop";
+  $("play").innerHTML = icon("square", 14) + "<span>Stop</span>";
 }
 function stop() {
   if (!playing) return;
   scene = JSON.parse(playing.snapshot);
   playing = null;
   document.body.classList.remove("playing");
-  $("play").textContent = "Play";
+  $("play").innerHTML = icon("play", 14) + "<span>Play</span>";
   refresh();
 }
 
@@ -362,12 +421,22 @@ document.querySelectorAll                   ("[data-tabbtn]").forEach((b) => (b.
 document.querySelectorAll                   ("[data-add]").forEach((b) => (b.onclick = () => add(b.dataset.add )));
 $("play").onclick = play;
 $("dup").onclick = duplicate;
+$("import-model").onclick = () => modelInput.click();
 $("del").onclick = remove;
 $("undo").onclick = () => { if (undo.length) { redo.push(JSON.stringify(scene)); restore(undo.pop() ); } };
 $("redo").onclick = () => { if (redo.length) { undo.push(JSON.stringify(scene)); restore(redo.pop() ); } };
 $                  ("snap").onchange = (e) => (snap = (e.target                    ).checked);
 $("new").onclick = () => { if (!confirm("Start a new scene? Unsaved changes are lost.")) return; checkpoint(); scene = structuredClone(DEFAULT); selected = -1; refresh(); };
-$("save").onclick = () => {
+$("save").onclick = async () => {
+  const p = Project.store;
+  if (p) {
+    const name = prompt("Scene name", scene.name || "untitled")?.trim();
+    if (!name) return;
+    scene.name = name;
+    await p.write(scenePath(), JSON.stringify(scene, null, 1));
+    toast(`Saved ${scenePath()} in ${p.label}`);
+    return;
+  }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(scene, null, 2)], { type: "application/json" }));
   a.download = (scene.name || "scene") + ".json";
@@ -383,7 +452,62 @@ $                  ("file").onchange = async (e) => {
     checkpoint(); scene = s; selected = -1; refresh();
   } catch (err) { alert("Not an ember scene: " + (err         ).message); }
 };
-$("open").onclick = () => $                  ("file").click();
+$("open").onclick = async () => {
+  const p = Project.store;
+  if (!p) { $                  ("file").click(); return; }
+  const files = (await p.list("scenes")).filter((f) => f.endsWith(".json"));
+  pickFromList(`Open a scene from ${p.label}`, files, async (f) => {
+    try {
+      const s = JSON.parse((await p.read("scenes/" + f)) ?? "")         ;
+      if (!Array.isArray(s.objects)) throw new Error("no objects array");
+      checkpoint(); scene = s; selected = -1; refresh();
+    } catch (err) { alert("Not an ember scene: " + (err         ).message); }
+  }, () => $                  ("file").click());
+};
+
+/** Small modal list. `other` adds an "Open file..." escape hatch. */
+function pickFromList(title        , items          , choose                     , other             ) {
+  const m = document.createElement("div");
+  m.className = "modal";
+  m.innerHTML = `<div class="dlg"><h3></h3><ul></ul><div class="iconrow"></div></div>`;
+  m.querySelector("h3") .textContent = title;
+  const ul = m.querySelector("ul") ;
+  if (!items.length) ul.innerHTML = `<li class="muted">No scenes saved yet</li>`;
+  for (const it of items) {
+    const li = document.createElement("li");
+    li.textContent = it.replace(/\.json$/, "");
+    li.onclick = () => { m.remove(); choose(it); };
+    ul.appendChild(li);
+  }
+  const row = m.querySelector(".iconrow") ;
+  if (other) { const b = document.createElement("button"); b.textContent = "Open file..."; b.onclick = () => { m.remove(); other(); }; row.appendChild(b); }
+  const c = document.createElement("button"); c.textContent = "Cancel"; c.onclick = () => m.remove(); row.appendChild(c);
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
+  document.body.appendChild(m);
+}
+
+// ---- project folder --------------------------------------------------------------
+const projBtn = $("project");
+function showProject() {
+  const p = Project.store;
+  projBtn.title = p ? `Project: ${p.label}` : "Open a project folder (saves scenes and sprites as files)";
+  projBtn.classList.toggle("on", !!p);
+  $("project-label").textContent = p ? p.label.split(/[\\/]/).pop()  : "";
+}
+Project.onChange(async (p) => {
+  showProject();
+  if (!p) return;
+  const n = await Library.syncFromProject();
+  persist();
+  if (document.body.dataset.tab === "sprites") setTab("sprites");
+  toast(`Project ${p.label}: ${n} sprite${n === 1 ? "" : "s"}`);
+});
+projBtn.onclick = async () => {
+  if (Project.store) { toast(`Saving to ${Project.store.label}`); return; }
+  try { await Project.pickFolder(); } catch (e) { if ((e         ).name !== "AbortError") alert((e         ).message); }
+};
+showProject();
+void Project.detectDesktop();
 
 addEventListener("keydown", (e) => {
   const typing = (e.target               ).closest("input,select,textarea");
@@ -476,4 +600,4 @@ eng.run({
 
 setTab("scene");
 refresh();
-(window                                  ).editor = { get scene() { return scene; }, select, add, play, pick, setTab, get playing() { return playing; } };
+(window                                  ).editor = { get scene() { return scene; }, select, add, play, pick, setTab, importModel, get playing() { return playing; } };

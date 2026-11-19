@@ -64,8 +64,16 @@ export class ObjectHandle {
   set velocity(v      ) { const b = this.body; if (b) { b.vel = [...v]        ; b.sleeping = false; } }
   /** True when resting on something (dynamic bodies only). */
   get grounded()          { return !!this.body?.grounded; }
+  /** Heading in radians (rotation about the vertical axis). */
   get rotation()         { return this.tr?.yaw ?? 0; }
-  set rotation(y        ) { const t = this.tr; if (t) t.yaw = y; }
+  set rotation(y        ) {
+    const t = this.tr, b = this.body;
+    if (t) t.yaw = y;
+    if (b) { const h = y / 2; b.rot = [0, Math.sin(h), 0, Math.cos(h)]; b.angVel = [0, 0, 0]; }
+  }
+  /** Angular velocity in radians per second (dynamic bodies tumble on their own). */
+  get spin()       { return this.body?.angVel ?? [0, 0, 0]; }
+  set spin(w      ) { const b = this.body; if (b) { b.angVel = [...w]        ; b.sleeping = false; } }
   get scale()       { return this.tr?.size ?? [1, 1, 1]; }
   set scale(s      ) { const t = this.tr; if (t) t.size = [...s]        ; }
   get color()       { return this.rt.world.store       (M).get(this.entity)?.color ?? [1, 1, 1]; }
@@ -102,7 +110,7 @@ export class ScriptRuntime {
            world       ;
            phys              ;
            R          ;
-           meshes                        ;
+           meshes                      ;
            sources                        ;
            api         ;
   errors                = [];
@@ -114,7 +122,7 @@ export class ScriptRuntime {
           attached = new Map                                                                                      ();
           handles = new Map                      ();
 
-  constructor(world       , phys              , R          , meshes                        , sources                        , input       , sound     , camera        ) {
+  constructor(world       , phys              , R          , meshes                      , sources                        , input       , sound     , camera        ) {
     this.world = world; this.phys = phys; this.R = R; this.meshes = meshes; this.sources = sources;
     const rt = this;
     this.api = {

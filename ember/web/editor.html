@@ -5,95 +5,118 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ember editor</title>
 <style>
-  :root{--bg:#141518;--panel:#1b1d21;--panel2:#22252a;--line:#2d3036;--ink:#e6e6e6;--mute:#8b8f97;--acc:#f2c14e;--acc2:#4b8be3;--bad:#e36b5b;--ok:#6cc46a;
+  :root{--bg:#0e0f11;--panel:#141518;--hover:#1f2125;--line:#1f2125;--ink:#e8e8e8;--mute:#7d8189;--acc:#f2c14e;--bad:#e36b5b;--ok:#6cc46a;--sel:#26324a;
     --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;--sans:ui-sans-serif,system-ui,"Segoe UI",sans-serif}
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:13px/1.4 var(--sans);overflow:hidden}
   button,select,input{font:inherit;color:inherit}
-  button{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap}
-  button:hover{border-color:#4a4e56}
-  button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-  button.primary{background:var(--acc);color:#1a1a1a;border-color:var(--acc);font-weight:600}
-  body.playing #play{background:var(--bad);border-color:var(--bad);color:#fff}
-  input,select{background:#121316;border:1px solid var(--line);border-radius:5px;padding:4px 6px;min-width:0}
-  input[type=checkbox]{width:auto}
-  input[type=color]{padding:0;height:26px;width:100%}
+  svg{display:block}
 
-  header{height:46px;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid var(--line);background:var(--panel)}
-  .logo{font-weight:800;letter-spacing:.04em;margin-right:8px}
-  .tabs{display:flex;gap:2px;background:#101114;padding:3px;border-radius:8px;margin-right:6px}
-  .tabs button{border:0;background:none;color:var(--mute);padding:5px 14px}
-  .tabs button.on{background:var(--panel2);color:var(--ink)}
-  .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+  /* buttons: quiet by default */
+  button{background:none;border:0;border-radius:7px;padding:6px 9px;cursor:pointer;color:var(--mute);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  button:hover{background:var(--hover);color:var(--ink)}
+  button.on{background:var(--hover);color:var(--ink)}
+  .ib{padding:7px}
+  .primary{background:var(--ink);color:#111;font-weight:600;padding:6px 14px}
+  .primary:hover{background:#fff;color:#111}
+  body.playing #play{background:var(--bad);color:#fff}
+  input,select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 7px;min-width:0}
+  input:focus,select:focus{outline:none;border-color:#3a3e45}
+  input[type=checkbox]{accent-color:var(--acc)}
+  input[type=color]{padding:0;height:26px;width:100%;border:0;background:none}
+
+  header{height:48px;display:flex;align-items:center;gap:4px;padding:0 10px;background:var(--panel)}
+  .logo{font-weight:800;letter-spacing:.02em;margin:0 10px 0 4px}
+  .tabs{display:flex;gap:2px;margin-right:10px}
+  .tabs button{padding:6px 12px}
+  .tabs button.on{color:var(--ink);background:var(--hover)}
+  .sep{width:1px;height:18px;background:var(--line);margin:0 6px}
   .grow{flex:1}
-  .tb{display:none;gap:6px;align-items:center}
+  .tb{display:none;gap:2px;align-items:center}
   body[data-tab=scene] .tb.scene,body[data-tab=sprites] .tb.sprites,body[data-tab=scripts] .tb.scripts{display:flex}
-  label.inline{display:flex;gap:5px;align-items:center;color:var(--mute)}
+  .toggle{display:inline-flex;align-items:center;gap:6px;color:var(--mute);padding:7px;border-radius:7px;cursor:pointer}
+  .toggle:hover{background:var(--hover)}
+  .toggle:has(input:checked){color:var(--ink);background:var(--hover)}
+  .toggle input{display:none}
+  .muted{color:var(--mute)}
 
-  main{position:absolute;inset:46px 0 0 0}
-  .ws{position:absolute;inset:0;display:none;grid-template-columns:230px minmax(0,1fr) 280px}
+  main{position:absolute;inset:48px 0 0 0}
+  .ws{position:absolute;inset:0;display:none;grid-template-columns:220px minmax(0,1fr) 270px;gap:1px;background:var(--line)}
   body[data-tab=scene] .ws.scene,body[data-tab=sprites] .ws.sprites,body[data-tab=scripts] .ws.scripts{display:grid}
-  aside{background:var(--panel);border-right:1px solid var(--line);overflow:auto;display:flex;flex-direction:column;min-width:0}
-  aside.right{border-right:0;border-left:1px solid var(--line)}
-  h3{margin:0;padding:10px 12px 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);display:flex;justify-content:space-between}
+  aside{background:var(--panel);overflow:auto;display:flex;flex-direction:column;min-width:0}
+  h3{margin:0;padding:14px 14px 8px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);display:flex;justify-content:space-between;align-items:center}
   ul{list-style:none;margin:0;padding:0 6px 10px}
-  li{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:5px;cursor:pointer}
-  li:hover{background:var(--panel2)}
-  li.sel{background:#2f3a52}
+  li{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:6px;cursor:pointer;color:#c9ccd2}
+  li:hover{background:var(--hover)}
+  li.sel{background:var(--sel);color:#fff}
   li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   li .kind{color:var(--mute);font-size:11px}
-  li canvas{width:24px;height:24px;image-rendering:pixelated;background:#2a2c31;border-radius:3px}
-  .sw{width:10px;height:10px;border-radius:3px;flex:none}
-
-  #view{position:relative;width:100%;height:100%;display:block;min-width:0}
-  .center{position:relative;min-width:0;overflow:hidden}
-  #inspector{padding:4px 12px 14px;display:grid;gap:8px}
-  .row{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;align-items:center;color:var(--mute)}
+  li canvas{width:22px;height:22px;image-rendering:pixelated;background:#202227;border-radius:4px}
+  .sw{width:8px;height:8px;border-radius:50%;flex:none}
+  .center{position:relative;min-width:0;overflow:hidden;background:var(--bg)}
+  #view{width:100%;height:100%;display:block}
+  #inspector{padding:2px 14px 16px;display:grid;gap:9px}
+  .row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:8px;align-items:center;color:var(--mute)}
   .vec{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
-  .hint{color:var(--mute);padding:0 2px}
-  #console{position:absolute;left:0;right:0;bottom:0;max-height:30%;overflow:auto;margin:0;padding:8px 12px;background:#0d0e10e8;font:12px/1.5 var(--mono);color:#cfd3dc;white-space:pre-wrap;display:none;border-top:1px solid var(--line)}
+  .hint{color:var(--mute);padding:0 2px;margin:0}
+  #console{position:absolute;left:0;right:0;bottom:0;max-height:30%;overflow:auto;margin:0;padding:8px 14px;background:#0b0c0de8;font:12px/1.5 var(--mono);color:#cfd3dc;white-space:pre-wrap;display:none}
   body.playing #console:not(:empty){display:block}
   #console.has-error{color:#ffb4a8}
-  .keys{padding:10px 12px;color:var(--mute);font-size:12px;line-height:1.7;border-top:1px solid var(--line);margin-top:auto}
-  kbd{font:11px var(--mono);border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--ink)}
+  .keys{padding:12px 14px;color:var(--mute);font-size:11.5px;line-height:1.8;margin-top:auto}
+  kbd{font:10.5px var(--mono);background:var(--hover);border-radius:4px;padding:1px 5px;color:#c9ccd2}
+  .iconrow{display:flex;gap:2px;padding:0 8px 10px;flex-wrap:wrap}
+
+  .modal{position:fixed;inset:0;background:#0009;display:grid;place-items:center;z-index:20}
+  .dlg{background:var(--panel);border-radius:12px;min-width:340px;max-width:90vw;max-height:70vh;overflow:auto;padding:4px 6px 6px;box-shadow:0 20px 60px #000a}
+  .dlg ul{padding:0 4px 8px}
+  .dlg .iconrow{justify-content:flex-end;padding:4px 4px 6px}
+  #project-label{font-size:12px}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:#111;padding:8px 14px;border-radius:999px;font-weight:500;z-index:10}
 
   /* sprites */
   .paintwrap{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100%;min-height:0}
-  .tools{display:flex;gap:6px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-  #palette{display:flex;flex-wrap:wrap;gap:3px}
-  .swatch{width:20px;height:20px;padding:0;border-radius:4px;border:2px solid transparent}
-  .swatch.on{border-color:#fff}
+  .tools{display:flex;gap:2px;align-items:center;padding:8px 10px;flex-wrap:wrap}
+  #palette{display:flex;flex-wrap:wrap;gap:4px;margin-left:6px}
+  .swatch{width:18px;height:18px;padding:0;border-radius:50%;border:0}
+  .swatch.on{outline:2px solid var(--ink);outline-offset:2px}
+  #color{width:24px;height:24px;border-radius:50%;overflow:hidden;cursor:pointer}
   #paint{width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}
-  .timeline{border-top:1px solid var(--line);padding:8px 10px;background:var(--panel)}
-  .tl-bar{display:flex;gap:6px;align-items:center;margin-bottom:8px}
-  #frames{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
-  .fr{position:relative;padding:3px;border-radius:6px;flex:none}
-  .fr canvas{width:56px;height:56px;image-rendering:pixelated;display:block;background:#2a2c31;border-radius:3px}
-  .fr span{position:absolute;left:6px;top:4px;font:10px var(--mono);color:var(--mute)}
-  .fr.on{background:var(--acc);border-color:var(--acc)}
-  #preview{width:100%;aspect-ratio:1;display:block;image-rendering:pixelated;border-radius:6px}
-  .pv{padding:0 12px 10px}
-  #previewinfo{color:var(--mute);font:11px var(--mono);margin-top:4px}
-  .anim{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;margin:0 8px 6px;border:1px solid var(--line);border-radius:6px;cursor:pointer}
+  .timeline{padding:10px 12px 12px;background:var(--panel)}
+  .tl-bar{display:flex;gap:2px;align-items:center;margin-bottom:10px}
+  .tl-bar strong{font-weight:500;color:var(--mute);margin-right:8px;font-variant-numeric:tabular-nums}
+  #tl-play{background:var(--ink);color:#111;border-radius:50%;width:30px;height:30px;padding:0;justify-content:center}
+  #tl-play:hover{background:#fff}
+  .fps{display:inline-flex;align-items:center;gap:6px;color:var(--mute);margin:0 8px}
+  .fps input{width:52px}
+  #frames{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+  .fr{position:relative;padding:3px;border-radius:8px;flex:none;background:var(--bg)}
+  .fr:hover{background:var(--hover)}
+  .fr canvas{width:52px;height:52px;image-rendering:pixelated;display:block;border-radius:5px;background:#1b1d21}
+  .fr span{position:absolute;left:7px;top:5px;font:10px var(--mono);color:var(--mute)}
+  .fr.on{background:var(--acc)}
+  .fr.on span{color:#111}
+  body.anim-playing #paint{cursor:default}
+  #preview{width:100%;aspect-ratio:1;display:block;image-rendering:pixelated;border-radius:8px}
+  .pv{padding:0 14px 10px}
+  #previewinfo{color:var(--mute);font:11px var(--mono);margin-top:6px}
+  .anim{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;margin:0 8px 6px;border-radius:8px;cursor:pointer;background:var(--bg)}
+  .anim.on{outline:1px solid var(--acc)}
   .anim .an{flex:1 1 100%}
-  .anim.on{border-color:var(--acc)}
-  .anim label{display:inline-flex;gap:4px;align-items:center;color:var(--mute);margin-right:6px}
-  .anim input[type=number]{width:46px}
-  .anim label{margin-right:0!important}
-  .anim .ax{margin-left:auto;padding:0 8px}
-  .libbtns{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 10px 10px}
+  .anim label{display:inline-flex;gap:4px;align-items:center;color:var(--mute)}
+  .anim input[type=number]{width:44px}
+  .anim .ax{margin-left:auto;padding:3px 7px}
 
   /* scripts */
   .codewrap{display:grid;grid-template-rows:auto minmax(0,1fr);height:100%}
-  .codebar{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
+  .codebar{display:flex;gap:12px;align-items:center;padding:10px 16px;background:var(--panel)}
   #script-name{font:600 13px var(--mono)}
   #syntax{font:12px var(--mono)}
   #syntax.ok{color:var(--ok)} #syntax.bad{color:var(--bad)}
-  #code{width:100%;height:100%;resize:none;border:0;outline:0;background:#101114;color:#dfe3ea;font:13px/1.55 var(--mono);padding:14px 16px;tab-size:2;white-space:pre}
-  .api{padding:4px 14px 20px;font-size:12px;color:#c3c7cf}
+  #code{width:100%;height:100%;resize:none;border:0;border-radius:0;outline:0;background:var(--bg);color:#dfe3ea;font:13px/1.6 var(--mono);padding:16px 18px;tab-size:2;white-space:pre}
+  .api{padding:0 14px 20px;font-size:12px;color:#b9bdc5}
   .api code{font:11.5px var(--mono);color:var(--acc)}
-  .api p{margin:6px 0}
-  .api h4{margin:14px 0 4px;color:var(--ink);font-size:12px}
+  .api p{margin:5px 0}
+  .api h4{margin:16px 0 4px;color:var(--ink);font-size:12px;font-weight:600}
 </style>
 </head>
 <body data-tab="scene">
@@ -105,27 +128,30 @@
     <button data-tabbtn="scripts">Scripts</button>
   </div>
   <div class="tb scene">
-    <button data-add="box">Box</button>
-    <button data-add="crate">Crate</button>
-    <button data-add="sphere">Ball</button>
-    <button data-add="cylinder">Pillar</button>
-    <button data-add="gem">Crystal</button>
-    <button data-add="light">Light</button>
+    <button class="ib" data-add="box" title="Add box"><i data-icon="box"></i></button>
+    <button class="ib" data-add="crate" title="Add crate (falls and tumbles)"><i data-icon="package"></i></button>
+    <button class="ib" data-add="sphere" title="Add ball"><i data-icon="circle"></i></button>
+    <button class="ib" data-add="cylinder" title="Add pillar"><i data-icon="cylinder"></i></button>
+    <button class="ib" data-add="gem" title="Add crystal (pickup)"><i data-icon="gem"></i></button>
+    <button class="ib" data-add="light" title="Add light"><i data-icon="lightbulb"></i></button>
+    <button class="ib" id="import-model" title="Import 3D model (.glb / .gltf)"><i data-icon="upload"></i></button>
     <span class="sep"></span>
-    <button id="dup" title="Ctrl+D">Duplicate</button>
-    <button id="del" title="Delete">Delete</button>
-    <button id="undo" title="Ctrl+Z">Undo</button>
-    <button id="redo" title="Ctrl+Y">Redo</button>
-    <label class="inline"><input type="checkbox" id="snap" checked> Snap</label>
+    <button class="ib" id="dup" title="Duplicate (Ctrl+D)"><i data-icon="copy"></i></button>
+    <button class="ib" id="del" title="Delete (Del)"><i data-icon="trash-2"></i></button>
+    <button class="ib" id="undo" title="Undo (Ctrl+Z)"><i data-icon="undo-2"></i></button>
+    <button class="ib" id="redo" title="Redo (Ctrl+Y)"><i data-icon="redo-2"></i></button>
+    <label class="toggle" title="Snap to 0.5"><input type="checkbox" id="snap" checked><i data-icon="magnet"></i></label>
   </div>
-  <div class="tb sprites"><span id="sp-name"></span></div>
-  <div class="tb scripts"><span class="hint">Scripts run when you press Play in the Scene tab.</span></div>
+  <div class="tb sprites"><span id="sp-name" class="muted"></span></div>
+  <div class="tb scripts"><span class="muted">Scripts run when you press Play.</span></div>
   <span class="grow"></span>
-  <button id="new">New</button>
-  <button id="open">Open</button>
-  <button id="save">Save</button>
+  <button class="ib" id="project"><i data-icon="hard-drive"></i><span id="project-label"></span></button>
+  <button class="ib" id="new" title="New scene"><i data-icon="file-plus"></i></button>
+  <button class="ib" id="open" title="Open scene"><i data-icon="folder-open"></i></button>
+  <button class="ib" id="save" title="Save scene"><i data-icon="save"></i></button>
   <input type="file" id="file" accept=".json" hidden>
-  <button id="play" class="primary" title="Ctrl+P">Play</button>
+  <span class="sep"></span>
+  <button id="play" class="primary" title="Play / Stop (Ctrl+P)"><i data-icon="play" data-size="14"></i><span>Play</span></button>
 </header>
 
 <main>
@@ -134,13 +160,13 @@
       <h3>Hierarchy <span id="count"></span></h3>
       <ul id="list"></ul>
       <div class="keys">
-        Click selects, drag moves (<kbd>Alt</kbd> for height)<br>
-        Right drag orbits, <kbd>Shift</kbd>+right pans, wheel zooms<br>
-        <kbd>F</kbd> focus &nbsp;<kbd>Del</kbd> delete &nbsp;arrows nudge
+        Drag to move, <kbd>Alt</kbd> drag for height<br>
+        Right drag orbit, <kbd>Shift</kbd> pan, wheel zoom<br>
+        <kbd>F</kbd> focus &nbsp;<kbd>Del</kbd> delete
       </div>
     </aside>
     <div class="center"><canvas id="view"></canvas><pre id="console"></pre></div>
-    <aside class="right">
+    <aside>
       <h3>Inspector</h3>
       <div id="inspector"></div>
     </aside>
@@ -148,57 +174,58 @@
 
   <section class="ws sprites">
     <aside>
-      <h3>Asset library</h3>
+      <h3>Assets</h3>
       <ul id="library"></ul>
-      <div class="libbtns">
-        <button id="sp-new">New sprite</button>
-        <button id="sp-rename">Rename</button>
-        <button id="sp-import">Import</button>
-        <button id="sp-del">Delete</button>
-        <button id="sp-png">Export PNG</button>
-        <button id="sp-json">Export JSON</button>
+      <div class="iconrow">
+        <button class="ib" id="sp-new" title="New sprite"><i data-icon="plus"></i></button>
+        <button class="ib" id="sp-rename" title="Rename"><i data-icon="pencil"></i></button>
+        <button class="ib" id="sp-import" title="Import JSON"><i data-icon="upload"></i></button>
+        <button class="ib" id="sp-png" title="Export PNG sheet"><i data-icon="image"></i></button>
+        <button class="ib" id="sp-json" title="Export JSON"><i data-icon="download"></i></button>
+        <button class="ib" id="sp-del" title="Delete sprite"><i data-icon="trash-2"></i></button>
       </div>
       <input type="file" id="sp-file" accept=".json" hidden>
       <div class="keys">
         <kbd>B</kbd> pencil <kbd>E</kbd> eraser <kbd>G</kbd> fill <kbd>I</kbd> pick<br>
-        Right click picks a colour<br>
-        <kbd>M</kbd> mirror <kbd>O</kbd> onion skin<br>
+        <kbd>M</kbd> mirror <kbd>O</kbd> onion <kbd>P</kbd> play<br>
         <kbd>[</kbd> <kbd>]</kbd> frames &nbsp;<kbd>N</kbd> new frame
       </div>
     </aside>
     <div class="center paintwrap">
       <div class="tools">
-        <button data-tool="pencil">Pencil</button>
-        <button data-tool="eraser">Eraser</button>
-        <button data-tool="fill">Fill</button>
-        <button data-tool="picker">Picker</button>
+        <button class="ib" data-tool="pencil" title="Pencil (B)"><i data-icon="pencil"></i></button>
+        <button class="ib" data-tool="eraser" title="Eraser (E)"><i data-icon="eraser"></i></button>
+        <button class="ib" data-tool="fill" title="Fill (G)"><i data-icon="paint-bucket"></i></button>
+        <button class="ib" data-tool="picker" title="Pick colour (I, or right click)"><i data-icon="pipette"></i></button>
         <span class="sep"></span>
-        <input type="color" id="color" style="width:34px">
+        <label class="toggle" title="Mirror drawing (M)"><input type="checkbox" id="mirror"><i data-icon="flip-horizontal-2"></i></label>
+        <label class="toggle" title="Onion skin (O)"><input type="checkbox" id="onion" checked><i data-icon="layers"></i></label>
+        <span class="sep"></span>
+        <input type="color" id="color" title="Custom colour">
         <div id="palette"></div>
-        <span class="sep"></span>
-        <label class="inline"><input type="checkbox" id="mirror"> Mirror</label>
-        <label class="inline"><input type="checkbox" id="onion" checked> Onion skin</label>
       </div>
       <div style="min-height:0"><canvas id="paint"></canvas></div>
       <div class="timeline">
         <div class="tl-bar">
+          <button id="tl-play" title="Play animation (P)"><i data-icon="play" data-size="14"></i></button>
+          <label class="fps">fps <input type="number" id="tl-fps" min="1" max="60" value="8"></label>
           <strong id="frameinfo"></strong>
           <span class="grow"></span>
-          <button id="fr-add" title="N">New frame</button>
-          <button id="fr-dup">Duplicate</button>
-          <button id="fr-left">Move left</button>
-          <button id="fr-right">Move right</button>
-          <button id="fr-flip">Flip</button>
-          <button id="fr-clear">Clear</button>
-          <button id="fr-del">Delete</button>
+          <button class="ib" id="fr-add" title="New frame (N)"><i data-icon="plus"></i></button>
+          <button class="ib" id="fr-dup" title="Duplicate frame"><i data-icon="copy"></i></button>
+          <button class="ib" id="fr-left" title="Move left"><i data-icon="chevron-left"></i></button>
+          <button class="ib" id="fr-right" title="Move right"><i data-icon="chevron-right"></i></button>
+          <button class="ib" id="fr-flip" title="Flip horizontally"><i data-icon="flip-horizontal-2"></i></button>
+          <button class="ib" id="fr-clear" title="Clear frame"><i data-icon="eraser"></i></button>
+          <button class="ib" id="fr-del" title="Delete frame"><i data-icon="trash-2"></i></button>
         </div>
         <div id="frames"></div>
       </div>
     </div>
-    <aside class="right">
+    <aside>
       <h3>Preview</h3>
       <div class="pv"><canvas id="preview" width="240" height="240"></canvas><div id="previewinfo"></div></div>
-      <h3>Animations <button id="an-add">Add</button></h3>
+      <h3>Animations <button class="ib" id="an-add" title="Add animation"><i data-icon="plus"></i></button></h3>
       <div id="anims"></div>
     </aside>
   </section>
@@ -207,39 +234,36 @@
     <aside>
       <h3>Scripts</h3>
       <ul id="scripts"></ul>
-      <div class="libbtns">
-        <button id="sc-new">New script</button>
-        <button id="sc-del">Delete</button>
-        <button id="sc-attach" style="grid-column:span 2">Attach to selected object</button>
+      <div class="iconrow">
+        <button class="ib" id="sc-new" title="New script"><i data-icon="plus"></i></button>
+        <button class="ib" id="sc-attach" title="Attach to the selected object"><i data-icon="link"></i></button>
+        <button class="ib" id="sc-del" title="Delete script"><i data-icon="trash-2"></i></button>
       </div>
     </aside>
     <div class="center codewrap">
       <div class="codebar"><span id="script-name"></span><span id="syntax"></span></div>
       <textarea id="code" spellcheck="false"></textarea>
     </div>
-    <aside class="right">
+    <aside>
       <h3>Script API</h3>
       <div class="api">
         <h4>Lifecycle</h4>
-        <p><code>start(self, game)</code> once, before the first update</p>
+        <p><code>start(self, game)</code> once</p>
         <p><code>update(self, game, dt)</code> 60 times a second</p>
-        <p><code>onTrigger(self, other, game)</code> overlapping a trigger</p>
-        <p><code>onCollide(self, other, game)</code> touching a solid</p>
+        <p><code>onTrigger(self, other, game)</code></p>
+        <p><code>onCollide(self, other, game)</code></p>
         <p><code>onDestroy(self, game)</code></p>
         <h4>self / other</h4>
-        <p><code>position</code> <code>velocity</code> <code>rotation</code> <code>scale</code> <code>color</code> read and write</p>
-        <p><code>grounded</code> <code>name</code> <code>tag</code> <code>alive</code></p>
-        <p><code>state</code> your variables for this object</p>
+        <p><code>position</code> <code>velocity</code> <code>rotation</code> <code>scale</code> <code>color</code></p>
+        <p><code>grounded</code> <code>name</code> <code>tag</code> <code>alive</code> <code>state</code></p>
         <p><code>push([x,y,z])</code> <code>destroy()</code> <code>distanceTo(o)</code></p>
         <h4>game</h4>
         <p><code>input.axes()</code> <code>input.held("KeyW")</code> <code>input.pressed("Space")</code></p>
         <p><code>find(name)</code> <code>findAll(tag)</code></p>
         <p><code>spawn({mesh, pos, size, color, body}, "script")</code></p>
-        <p><code>raycast(from, dir, max)</code></p>
-        <p><code>follow(obj, distance, height)</code> camera</p>
+        <p><code>raycast(from, dir, max)</code> <code>follow(obj, dist, height)</code></p>
         <p><code>sound.jump()</code> <code>pickup()</code> <code>pad()</code> <code>win()</code></p>
-        <p><code>print(text)</code> on screen, <code>log(...)</code> to console</p>
-        <p><code>state</code> shared by all scripts, <code>time</code> seconds</p>
+        <p><code>print(text)</code> <code>log(...)</code> <code>state</code> <code>time</code></p>
       </div>
     </aside>
   </section>

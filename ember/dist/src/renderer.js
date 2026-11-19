@@ -10,7 +10,7 @@
 import {                       frustumPlanes, invert, lookAt, multiply, normalize, ortho, perspective } from "./math.js";
 import {                STRIDE } from "./mesh.js";
 
-                                                                                                                                   
+                                                                                                                   
                                                                                            
                                                                       
 
@@ -239,7 +239,8 @@ export class Renderer {
     const vao = make();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, m.indices, gl.STATIC_DRAW);
-    return { vao, shadowVao: vao, count: m.indices.length, radius: m.radius, id: this.nextMesh++ };
+    const indexType = m.indices instanceof Uint32Array ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
+    return { vao, count: m.indices.length, radius: m.radius, id: this.nextMesh++, indexType };
   }
 
   /**
@@ -342,7 +343,7 @@ export class Renderer {
       if (!b.nCast) continue;
       gl.bindVertexArray(b.mesh.vao);
       this.pointInstances(b.castOff * 4);
-      gl.drawElementsInstanced(gl.TRIANGLES, b.mesh.count, gl.UNSIGNED_SHORT, 0, b.nCast);
+      gl.drawElementsInstanced(gl.TRIANGLES, b.mesh.count, b.mesh.indexType, 0, b.nCast);
       draws++;
     }
     gl.cullFace(gl.BACK);
@@ -399,7 +400,7 @@ export class Renderer {
       if (!b.nVis) continue;
       gl.bindVertexArray(b.mesh.vao);
       this.pointInstances(b.visOff * 4);
-      gl.drawElementsInstanced(gl.TRIANGLES, b.mesh.count, gl.UNSIGNED_SHORT, 0, b.nVis);
+      gl.drawElementsInstanced(gl.TRIANGLES, b.mesh.count, b.mesh.indexType, 0, b.nVis);
       draws++;
       instances += b.nVis;
     }

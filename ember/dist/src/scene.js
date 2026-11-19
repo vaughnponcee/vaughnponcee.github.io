@@ -9,8 +9,9 @@
                                                        
                                                                 
 import {            fromTRS, lerp, quatFromEuler } from "./math.js";
+import { fromBase64, parseModel } from "./gltf.js";
 
-                                                                       
+                                                                                           
                                                                  
 
                               
@@ -26,6 +27,8 @@ import {            fromTRS, lerp, quatFromEuler } from "./math.js";
                   
                 
                   
+                    
+                                                                  
                     
                                                                  
                
@@ -43,6 +46,8 @@ import {            fromTRS, lerp, quatFromEuler } from "./math.js";
                
                                                                       
                                    
+                                                                                     
+                                  
                          
  
 
@@ -52,11 +57,23 @@ import {            fromTRS, lerp, quatFromEuler } from "./math.js";
 /** Component names used by the built-in systems. */
 export const T = "transform", M = "model", B = "body", S = "source", L = "light";
 
-export function spawnObject(o             , world       , phys              , R          , meshes                        )         {
+/** Upload any scene models that aren't in the mesh table yet. Bad models are skipped and reported. */
+export function loadModels(scene       , R          , meshes                      )           {
+  const errors           = [];
+  for (const [name, data] of Object.entries(scene.models ?? {})) {
+    const key = `model:${name}`;
+    if (meshes[key]) continue;
+    try { meshes[key] = R.createMesh(parseModel(fromBase64(data)).mesh); }
+    catch (e) { errors.push(`${name}: ${(e         ).message}`); }
+  }
+  return errors;
+}
+
+export function spawnObject(o             , world       , phys              , R          , meshes                      )         {
   const e = world.spawn();
   world.store             (S).set(e, o);
   world.store           (T).set(e, { pos: [...o.pos]        , prev: [...o.pos]        , size: [...o.size]        , yaw: o.yaw ?? 0 });
-  world.store       (M).set(e, { mesh: meshes[o.mesh], color: o.color, emissive: o.emissive ?? 0, rough: o.rough ?? 0.6, checker: !!o.checker });
+  world.store       (M).set(e, { mesh: meshes[o.mesh] ?? meshes.box, color: o.color, emissive: o.emissive ?? 0, rough: o.rough ?? 0.6, checker: !!o.checker });
   const kind = o.body ?? "static";
   if (kind !== "none") {
     const sphere = o.mesh === "sphere" || o.mesh === "gem";
@@ -64,11 +81,12 @@ export function spawnObject(o             , world       , phys              , R 
       ? { kind: "sphere"         , r: Math.max(o.size[0], o.size[1], o.size[2]) / 2 }
       : { kind: "box"         , half: [o.size[0] / 2, (o.mesh === "plane" ? 0.05 : o.size[1] / 2), o.size[2] / 2]         };
     const body = phys.add({
-      pos: o.pos, shape, user: e,
+      pos: o.pos, shape, user: e, rot: quatFromEuler(o.yaw ?? 0),
       mass: kind === "dynamic" ? (o.mass ?? 1) : 0,
       trigger: kind === "trigger",
       restitution: o.bounce ?? 0.1,
       friction: o.friction ?? 0.6,
+      fixedRotation: !!o.upright,
     });
     world.store      (B).set(e, body);
   }
@@ -80,7 +98,8 @@ export function spawnObject(o             , world       , phys              , R 
   return e;
 }
 
-export function spawnScene(scene       , world       , phys              , R          , meshes                        )                      {
+export function spawnScene(scene       , world       , phys              , R          , meshes                      )                      {
+  loadModels(scene, R, meshes);
   if (scene.sky) R.sky = scene.sky;
   if (scene.horizon) R.horizon = scene.horizon;
   if (scene.sunDir) { const d = scene.sunDir, l = Math.hypot(...d); R.sunDir = [d[0] / l, d[1] / l, d[2] / l]; }
@@ -111,7 +130,8 @@ export function syncAndDraw(world       , R          , alpha        , model = ne
     const px = moving ? lerp(t.prev[0], t.pos[0], alpha) : t.pos[0];
     const py = moving ? lerp(t.prev[1], t.pos[1], alpha) : t.pos[1];
     const pz = moving ? lerp(t.prev[2], t.pos[2], alpha) : t.pos[2];
-    fromTRS([px, py, pz], quatFromEuler(t.yaw), t.size, model);
+    // moving bodies use their simulated orientation; everything else uses yaw
+    fromTRS([px, py, pz], moving ? b.rot : quatFromEuler(t.yaw), t.size, model);
     R.draw(m.mesh, model, m.color, { emissive: m.emissive, rough: m.rough, checker: m.checker, shadow: m.emissive === 0 });
     const l = ls.get(e);
     if (l) { l.pos[0] = px; l.pos[1] = py; l.pos[2] = pz; }

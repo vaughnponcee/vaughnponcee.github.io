@@ -8,6 +8,7 @@
  * Keys (while the Sprites tab is open): B pencil, E eraser, G fill, I picker,
  * M mirror, O onion skin, [ ] previous/next frame, N new frame, Ctrl+Z / Ctrl+Y.
  */
+import { icon } from "./icons.js";
 import {                                    Library, blankFrame, decodePixels, encodePixels, sheetCanvas } from "../src/assets.js";
 
                                                     
@@ -25,6 +26,8 @@ export function initSpriteEditor() {
   let pixels = decodePixels(asset.frames[0], asset.w, asset.h);
   const undo           = [], redo           = [];
   let previewAnim = 0, previewT = 0;
+  // timeline playback: shows every frame in order on the big canvas
+  let playing = false, playT = 0, shown = -1;
 
   function newAsset(name        , w        , h        )              {
     return { kind: "sprite", name, w, h, frames: [blankFrame(w, h)], anims: [{ name: "idle", from: 0, to: 0, fps: 8, loop: true }] };
@@ -69,8 +72,12 @@ export function initSpriteEditor() {
       g.drawImage(t, ox, oy, asset.w * s, asset.h * s);
       g.globalAlpha = 1;
     };
-    if (onion && frame > 0) blit(decodePixels(asset.frames[frame - 1], asset.w, asset.h), 0.28);
-    blit(pixels, 1);
+    if (playing && shown >= 0) {
+      blit(shown === frame ? pixels : decodePixels(asset.frames[shown], asset.w, asset.h), 1);
+    } else {
+      if (onion && frame > 0) blit(decodePixels(asset.frames[frame - 1], asset.w, asset.h), 0.28);
+      blit(pixels, 1);
+    }
     if (s >= 6) {
       g.strokeStyle = "#ffffff14";
       g.beginPath();
@@ -113,6 +120,7 @@ export function initSpriteEditor() {
     return [Math.floor((e.clientX - r.left - ox) / s), Math.floor((e.clientY - r.top - oy) / s)];
   };
   cv.addEventListener("pointerdown", (e) => {
+    if (playing) togglePlay(); // clicking the canvas stops playback so you can draw
     const [x, y] = cell(e);
     if (x < 0 || y < 0 || x >= asset.w || y >= asset.h) return;
     if (tool === "picker" || e.button === 2) {
@@ -167,6 +175,7 @@ export function initSpriteEditor() {
 
   // ---- frames ------------------------------------------------------------------
   function goto(i        ) {
+    if (playing) togglePlay();
     commitFrame();
     frame = Math.max(0, Math.min(asset.frames.length - 1, i));
     pixels = decodePixels(asset.frames[frame], asset.w, asset.h);
@@ -215,13 +224,30 @@ export function initSpriteEditor() {
     pixels = out; commitFrame(); renderAll();
   };
 
+  // ---- timeline playback ----------------------------------------------------------
+  const playBtn = $("tl-play"), fpsBox = $                  ("tl-fps");
+  function togglePlay() {
+    playing = !playing;
+    playT = 0;
+    shown = frame;
+    document.body.classList.toggle("anim-playing", playing);
+    playBtn.innerHTML = icon(playing ? "pause" : "play", 14);
+    playBtn.title = playing ? "Pause (P)" : "Play animation (P)";
+    if (!playing) { shown = -1; renderFrames(); draw(); }
+  }
+  playBtn.onclick = togglePlay;
+  function highlight(i        ) {
+    strip.querySelectorAll(".fr").forEach((el, k) => el.classList.toggle("on", k === i));
+    $("frameinfo").textContent = `Frame ${i} of ${asset.frames.length - 1}`;
+  }
+
   // ---- animations ----------------------------------------------------------------
   function renderAnims() {
     animList.innerHTML = "";
     asset.anims.forEach((a, i) => {
       const row = document.createElement("div");
       row.className = "anim" + (i === previewAnim ? " on" : "");
-      row.innerHTML = `<input class="an" value=""><label>from<input type="number" class="af" min="0"></label><label>to<input type="number" class="at" min="0"></label><label>fps<input type="number" class="ap" min="1" max="60"></label><label class="lp"><input type="checkbox" class="al">loop</label><button class="ax" title="Delete animation">&times;</button>`;
+      row.innerHTML = `<input class="an" value=""><label>from<input type="number" class="af" min="0"></label><label>to<input type="number" class="at" min="0"></label><label>fps<input type="number" class="ap" min="1" max="60"></label><label class="lp"><input type="checkbox" class="al">loop</label><button class="ax" title="Delete animation">${icon("x", 14)}</button>`;
       const q =                             (c        ) => row.querySelector(c)     ;
       q(".an").value = a.name; q(".af").value = String(a.from); q(".at").value = String(a.to); q(".ap").value = String(a.fps); q(".al").checked = a.loop;
       const max = asset.frames.length - 1;
@@ -323,6 +349,12 @@ export function initSpriteEditor() {
   function tick(now        ) {
     const dt = (now - lastT) / 1000;
     lastT = now;
+    if (document.body.dataset.tab === "sprites" && playing) {
+      playT += dt;
+      const fps = Math.max(1, Math.min(60, Number(fpsBox.value) || 8));
+      const idx = Math.floor(playT * fps) % asset.frames.length;
+      if (idx !== shown) { shown = idx; draw(); highlight(idx); }
+    }
     if (document.body.dataset.tab === "sprites") {
       previewT += dt;
       const a             = asset.anims[previewAnim] ?? { name: "", from: 0, to: asset.frames.length - 1, fps: 8, loop: true };
@@ -357,6 +389,7 @@ export function initSpriteEditor() {
     else if (k === "BracketLeft") goto(frame - 1);
     else if (k === "BracketRight") goto(frame + 1);
     else if (k === "KeyN") $("fr-add").click();
+    else if (k === "KeyP") togglePlay();
     else if (e.ctrlKey && k === "KeyZ") { if (undo.length) { redo.push(JSON.stringify({ frames: asset.frames, frame, anims: asset.anims })); restore(undo.pop() ); } e.preventDefault(); }
     else if (e.ctrlKey && k === "KeyY") { if (redo.length) { undo.push(JSON.stringify({ frames: asset.frames, frame, anims: asset.anims })); restore(redo.pop() ); } e.preventDefault(); }
   });

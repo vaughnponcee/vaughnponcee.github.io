@@ -39,7 +39,8 @@ export class Engine {
            input       ;
            sfx = new Sfx();
            loop = new FixedLoop(1 / 60);
-           meshes                        ;
+  /** Built-in meshes plus any loaded models ("model:<name>"). */
+           meshes                      ;
   camera         = { pos: [0, 8, 14], target: [0, 0, 0], fov: (60 * Math.PI) / 180, near: 0.1, far: 300 };
   /** Run physics.step automatically each fixed step. */
   autoPhysics = true;

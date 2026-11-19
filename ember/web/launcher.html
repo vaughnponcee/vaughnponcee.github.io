@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ember</title>
+<style>
+  html,body{margin:0;height:100%;background:#0e0f11;color:#e8e8e8;font:15px/1.5 ui-sans-serif,system-ui,"Segoe UI",sans-serif}
+  main{max-width:760px;margin:0 auto;padding:80px 24px}
+  h1{font:900 56px/1 "Arial Black","Segoe UI Black",system-ui;letter-spacing:-.03em;text-transform:uppercase;margin:0 0 12px}
+  p{color:#7d8189;margin:0 0 36px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  a{display:block;padding:20px;border-radius:12px;background:#141518;color:inherit;text-decoration:none;transition:background .15s}
+  a:hover{background:#1f2125}
+  a b{display:block;font-size:16px;margin-bottom:4px}
+  a span{color:#7d8189;font-size:13.5px}
+  #where{margin-top:28px;font:12px ui-monospace,Consolas,monospace;color:#7d8189}
+</style>
+</head>
+<body>
+<main>
+  <h1>ember</h1>
+  <p>3D and 2D game engine.</p>
+  <div class="grid">
+    <a data-page="editor.html"><b>Editor</b><span>Scenes, sprites, scripts</span></a>
+    <a data-page="index.html"><b>Crystal Run</b><span>3D demo</span></a>
+    <a data-page="platformer.html"><b>Moss Ledge</b><span>2D demo</span></a>
+    <a data-page="index.html?stress=1500"><b>Stress test</b><span>1,500 physics crates</span></a>
+  </div>
+  <div id="where"></div>
+</main>
+<script>
+  // keep the desktop token so pages can save to the project folder
+  document.querySelectorAll("a[data-page]").forEach((a) => { a.href = a.dataset.page + location.hash; });
+  const t = /token=([0-9a-f]{32})/.exec(location.hash);
+  if (t) fetch("/api/info", { headers: { "x-ember-token": t[1] } }).then((r) => r.json()).then((i) => {
+    document.getElementById("where").textContent = "Project folder: " + i.project;
+  }).catch(() => {});
+</script>
+</body>
+</html>

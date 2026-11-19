@@ -66,10 +66,18 @@ export class Camera2D {
     this.sy = (rnd() * 2 - 1) * this.shake;
   }
 
+  /** Snap the view to whole screen pixels (pixel art: no shimmering edges). */
+  pixelSnap = false;
+
   /** Projection for a viewport of w x h pixels, y down, centred on (x, y). */
   matrix(w        , h        , out       )       {
     const hw = w / 2 / this.zoom, hh = h / 2 / this.zoom;
-    const cx = this.x + this.sx, cy = this.y + this.sy;
+    let cx = this.x + this.sx, cy = this.y + this.sy;
+    if (this.pixelSnap) {
+      // left/top edge on an exact screen pixel, whatever the viewport parity
+      cx = Math.round((cx - hw) * this.zoom) / this.zoom + hw;
+      cy = Math.round((cy - hh) * this.zoom) / this.zoom + hh;
+    }
     return ortho(cx - hw, cx + hw, cy + hh, cy - hh, -1, 1, out);
   }
 
@@ -97,6 +105,8 @@ export class SpriteBatch {
           proj       = new Float32Array(16);
           uProj                      ;
           cap = 0;
+  /** Screen pixels per world unit while snapping (set by begin from a pixelSnap camera), else 0. */
+          snap = 0;
 
   constructor(gl                        ) {
     this.gl = gl;
@@ -204,6 +214,7 @@ export class SpriteBatch {
   begin(width        , height        , cam           )       {
     if (cam) cam.matrix(width, height, this.proj);
     else ortho(0, width, height, 0, -1, 1, this.proj);
+    this.snap = cam ? (cam.pixelSnap ? cam.zoom : 0) : 1;
     this.n = 0;
     this.cur = null;
     const gl = this.gl;
@@ -227,7 +238,14 @@ export class SpriteBatch {
     let u0 = fr.x / T.w, v0 = fr.y / T.h, u1 = (fr.x + fr.w) / T.w, v1 = (fr.y + fr.h) / T.h;
     if (o.flipX) { const t = u0; u0 = u1; u1 = t; }
     if (o.flipY) { const t = v0; v0 = v1; v1 = t; }
-    d[k] = x; d[k + 1] = y; d[k + 2] = w ?? fr.w; d[k + 3] = h ?? fr.h;
+    const sw = w ?? fr.w, sh = h ?? fr.h;
+    if (this.snap && !o.rot) {
+      // put the sprite's top-left corner on a whole screen pixel
+      const ox = o.ox ?? 0.5, oy = o.oy ?? 0.5, z = this.snap;
+      x = Math.round((x - sw * ox) * z) / z + sw * ox;
+      y = Math.round((y - sh * oy) * z) / z + sh * oy;
+    }
+    d[k] = x; d[k + 1] = y; d[k + 2] = sw; d[k + 3] = sh;
     d[k + 4] = o.rot ?? 0; d[k + 5] = o.ox ?? 0.5; d[k + 6] = o.oy ?? 0.5;
     d[k + 7] = u0; d[k + 8] = v0; d[k + 9] = u1; d[k + 10] = v1;
     const c = o.color ?? 0xffffffff;

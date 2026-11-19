@@ -1,7 +1,8 @@
 /**
  * Keyboard, mouse (with pointer lock) and gamepad, polled once per frame.
- * "pressed" means went down since the last endFrame(), so a tap that starts
- * and ends between two frames is still seen.
+ * "pressed" means went down since the last endFrame() that consumed input, so
+ * a tap that starts and ends between two frames is still seen, and a tap that
+ * lands on a frame with no simulation step is held for the next one.
  */
 export class Input {
           down = new Set        ();
@@ -51,8 +52,13 @@ export class Input {
 
   padButton(i        )          { return !!navigator.getGamepads?.()[0]?.buttons[i]?.pressed; }
 
-  endFrame()       {
-    this.hit.clear();
+  /**
+   * Call once per rendered frame. Pass consumed=false when no fixed step ran
+   * this frame: presses are kept so the next step still sees them (on a
+   * 144 Hz screen most frames run no 60 Hz step, and a tap would be lost).
+   */
+  endFrame(consumed = true)       {
+    if (consumed) this.hit.clear();
     this.mouseDX = this.mouseDY = 0;
   }
 }

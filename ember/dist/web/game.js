@@ -274,7 +274,9 @@ function frame(now        ) {
   last = now;
   R.resize();
 
+  let stepped = 0;
   const alpha = loop.advance(BENCH ? 1 / 60 : elapsed, (dt) => {
+    stepped++;
     savePrev();
     if (!BENCH) playerSystem(dt);
     moverSystem(simTime, dt);
@@ -358,7 +360,7 @@ function frame(now        ) {
       draws: R.stats.draws, instances: R.stats.instances, bodies: phys.bodies.length, sleeping: phys.stats.sleeping,
     };
   }
-  input.endFrame();
+  input.endFrame(stepped > 0);
   requestAnimationFrame(frame);
 }
 

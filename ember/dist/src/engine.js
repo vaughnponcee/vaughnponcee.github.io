@@ -52,6 +52,14 @@ export class Engine {
   deterministic = false;
   /** Max device pixel ratio; lower it to trade sharpness for fill rate. */
   maxDpr = 2;
+  /**
+   * Pixel-art mode: draw2d gets the canvas size in device pixels and the
+   * canvas uses the full device resolution, so integer camera zoom gives
+   * perfectly square, seam-free pixels at any display scaling.
+   */
+  pixelArt = false;
+  /** Device pixels per CSS pixel; multiply UI sizes by this in pixelArt mode. */
+  get dpr()         { return this.canvas.width / Math.max(1, this.canvas.clientWidth); }
 
           last = 0;
           fpsAcc = 0;
@@ -86,7 +94,9 @@ export class Engine {
       this.last = now;
       const t0 = performance.now();
       this.resize();
+      let steps = 0;
       const alpha = this.loop.advance(elapsed, (dt) => {
+        steps++;
         game.fixedUpdate?.(dt);
         if (this.autoPhysics) this.physics.step(dt);
         this.world.flush();
@@ -106,15 +116,16 @@ export class Engine {
         gl.clearColor(0.06, 0.07, 0.09, 1);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       }
-      const cssW = this.canvas.clientWidth, cssH = this.canvas.clientHeight;
+      // 2D normally works in CSS pixels. Pixel-art games work in device pixels
+      // instead, so one art pixel maps to a whole number of screen pixels.
+      const W2 = this.pixelArt ? w : this.canvas.clientWidth, H2 = this.pixelArt ? h : this.canvas.clientHeight;
       if (game.draw2d || this.showStats) {
-        // 2D works in CSS pixels; the projection maps them onto the device-pixel canvas
         this.sprites.resetStats();
-        this.sprites.begin(cssW, cssH);
+        this.sprites.begin(W2, H2);
         if (game.draw2d) {
-          game.draw2d(this.sprites, cssW, cssH);
+          game.draw2d(this.sprites, W2, H2);
         }
-        if (this.showStats) this.drawStats(cssW);
+        if (this.showStats) this.drawStats(W2);
         this.sprites.end();
       }
       this.frameMs = performance.now() - t0;
@@ -122,7 +133,7 @@ export class Engine {
       this.fpsAcc += elapsed;
       this.fpsN++;
       if (this.fpsAcc >= 0.5) { this.fps = this.fpsN / this.fpsAcc; this.fpsAcc = 0; this.fpsN = 0; this.worstShown = this.worst; this.worst = 0; }
-      this.input.endFrame();
+      this.input.endFrame(steps > 0);
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
@@ -143,7 +154,7 @@ export class Engine {
   }
 
   resize()       {
-    const dpr = Math.min(devicePixelRatio || 1, this.maxDpr);
+    const dpr = this.pixelArt ? devicePixelRatio || 1 : Math.min(devicePixelRatio || 1, this.maxDpr);
     const w = Math.round(this.canvas.clientWidth * dpr), h = Math.round(this.canvas.clientHeight * dpr);
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
   }

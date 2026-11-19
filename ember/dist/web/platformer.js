@@ -11,6 +11,7 @@ import { Animator, Library, decodePixels, loadSprite } from "../src/assets.js";
 const canvas = document.getElementById("view")                     ;
 const eng = new Engine(canvas);
 eng.autoPhysics = false;
+eng.pixelArt = true;
 if (new URLSearchParams(location.search).has("bench")) eng.deterministic = true;
 const sb = eng.sprites, input = eng.input, sfx = eng.sfx;
 const TILE = 16;
@@ -137,6 +138,7 @@ LEVEL.forEach((row, y) => [...row].forEach((ch, x) => {
 const P = { b: { x: spawn.x, y: spawn.y, w: 10, h: 14 }, vx: 0, vy: 0, face: 1, grounded: false, coyote: 0, buffer: 0, hearts: 3, hurt: 0, anim: 0 };
 let respawn = { ...spawn }, coinsGot = 0, won = false, time = 0, deaths = 0;
 const cam = new Camera2D();
+cam.pixelSnap = true;
 cam.x = spawn.x;
 cam.y = spawn.y;
 
@@ -162,7 +164,12 @@ function hurt() {
   } else { P.vy = -200; P.vx = -P.face * 120; }
 }
 
+// previous-step positions, so drawing can blend between 60 Hz steps on any refresh rate
+const prevP = { x: P.b.x, y: P.b.y };
+const prevS = new Map                                 ();
 function fixedUpdate(dt        ) {
+  prevP.x = P.b.x; prevP.y = P.b.y;
+  for (const s of slimes) prevS.set(s, { x: s.b.x, y: s.b.y });
   if (won) return;
   time += dt;
   const ax = input.axes().x;
@@ -220,11 +227,17 @@ function fixedUpdate(dt        ) {
   }
 }
 
-function update(dt        ) {
-  const vw = canvas.clientWidth, vh = canvas.clientHeight;
-  cam.zoom = Math.max(2, Math.round(vh / (11 * TILE)));
+let alphaNow = 1;
+/** Interpolated player position for this rendered frame. */
+const plX = () => lerp(prevP.x, P.b.x, alphaNow), plY = () => lerp(prevP.y, P.b.y, alphaNow);
+
+function update(dt        , alpha        ) {
+  alphaNow = alpha;
+  const vw = canvas.width, vh = canvas.height; // device pixels (pixelArt mode)
+  // whole screen pixels per art pixel: about 11 tiles tall, never fractional
+  cam.zoom = Math.max(1, Math.round(vh / (11 * TILE)));
   // look ahead in the facing direction, and slightly above the player
-  const tx = P.b.x + 5 + P.face * 28 + P.vx * 0.15, ty = P.b.y - 10;
+  const tx = plX() + 5 + P.face * 28 + P.vx * 0.15, ty = plY() - 10;
   cam.x = lerp(cam.x, tx, damp(5, dt));
   cam.y = lerp(cam.y, ty, damp(3.5, dt));
   const hw = vw / 2 / cam.zoom, hh = vh / 2 / cam.zoom;
@@ -235,19 +248,21 @@ function update(dt        ) {
 }
 
 function hills(sb             , w        , h        , par        , color        , base        , amp        , seed        ) {
-  // parallax silhouettes from stacked columns
-  const step = 6;
-  const off = cam.x * par;
-  for (let x = -step; x < w + step; x += step) {
-    const wx = (x + off) / 90 + seed;
+  // parallax silhouettes on the same art-pixel grid as the level: columns one
+  // art pixel wide, offsets and heights in whole art pixels
+  const z = cam.zoom;
+  const off = Math.round(cam.x * par); // in art pixels
+  const cols = Math.ceil(w / z) + 1;
+  for (let i = 0; i < cols; i++) {
+    const wx = (i + off) / 45 + seed;
     const top = base + Math.sin(wx) * amp + Math.sin(wx * 2.3 + seed) * amp * 0.4;
-    sb.rect(x, h * top, step + 1, h, color);
+    sb.rect(i * z, Math.round((h * top) / z) * z, z, h, color);
   }
 }
 
 function draw2d(sb             , w        , h        ) {
   // sky gradient and parallax layers in screen space
-  for (let i = 0; i < 12; i++) { const t = i / 11; sb.rect(0, (h * i) / 12, w, h / 12 + 1, ((Math.round(lerp(0x8f, 0xe6, t)) << 24) | (Math.round(lerp(0xc4, 0xe9, t)) << 16) | (Math.round(lerp(0xf0, 0xd8, t)) << 8) | 0xff) >>> 0); }
+  for (let i = 0; i < 12; i++) { const t = i / 11; sb.rect(0, Math.floor((h * i) / 12), w, Math.ceil(h / 12) + 1, ((Math.round(lerp(0x8f, 0xe6, t)) << 24) | (Math.round(lerp(0xc4, 0xe9, t)) << 16) | (Math.round(lerp(0xf0, 0xd8, t)) << 8) | 0xff) >>> 0); }
   hills(sb, w, h, 0.15, 0xa9c7b6ff, 0.55, 0.07, 1);
   hills(sb, w, h, 0.35, 0x7fae86ff, 0.68, 0.06, 4);
   sb.flush();
@@ -260,7 +275,8 @@ function draw2d(sb             , w        , h        ) {
   for (const c of checkpoints) sb.draw(checkF, c.x + 8, c.y + 8, 16, 16, { color: respawn.x === c.x ? 0xffffffff : 0x9aa0aaff });
   sb.draw(flagF, goal.x + 8, goal.y + 8);
   for (const s of slimes) {
-    if (s.alive) sb.draw(slimeF[Math.floor(t * 4 + s.b.x * 0.01) % 2], s.b.x + 6, s.b.y + 2, 16, 16, { flipX: s.vx > 0 });
+    const q = prevS.get(s) ?? s.b, sx = lerp(q.x, s.b.x, alphaNow), sy = lerp(q.y, s.b.y, alphaNow);
+    if (s.alive) sb.draw(slimeF[Math.floor(t * 4 + s.b.x * 0.01) % 2], sx + 6, sy + 2, 16, 16, { flipX: s.vx > 0 });
     else if (s.squash < 0.4) sb.draw(slimeF[1], s.b.x + 6, s.b.y + 10, 16 + s.squash * 20, 6 * (1 - s.squash * 2), { color: 0xffffffaa });
   }
   const blink = P.hurt > 0 && Math.floor(P.hurt * 12) % 2 === 0;
@@ -270,27 +286,28 @@ function draw2d(sb             , w        , h        ) {
       heroAnim.play(state);
       heroAnim.update(1 / 60);
       const fr = heroAnim.frame();
-      sb.draw(fr, P.b.x + 5, P.b.y + 14 - fr.h / 2, fr.w, fr.h, { flipX: P.face < 0 });
+      sb.draw(fr, plX() + 5, plY() + 14 - fr.h / 2, fr.w, fr.h, { flipX: P.face < 0 });
     } else {
       const f = state === "jump" ? heroF.jump : state === "run" ? heroF.run[Math.floor(P.anim) % 2] : heroF.idle;
-      sb.draw(f, P.b.x + 5, P.b.y + 6, 16, 16, { flipX: P.face < 0 });
+      sb.draw(f, plX() + 5, plY() + 6, 16, 16, { flipX: P.face < 0 });
     }
   }
   for (const d of dots) sb.draw(dotF, d.x, d.y, 2, 2, { color: d.c });
   sb.flush();
 
-  // HUD in screen pixels
+  // HUD: sizes in CSS pixels times the device pixel ratio; icons at whole multiples
   sb.begin(w, h);
-  for (let i = 0; i < 3; i++) sb.draw(i < P.hearts ? heartF : heartEmpty, 26 + i * 34, 30, 32, 32);
-  sb.draw(coinF[0], 26, 72, 28, 28);
-  sb.text(`${coinsGot} / ${coins.length}`, 46, 60, 22, 0xffffffff);
-  sb.text(`${time.toFixed(1)} s`, w - 24, 20, 22, 0xffffffff, 1);
-  if (deaths) sb.text(`${deaths} ${deaths === 1 ? "restart" : "restarts"}`, w - 24, 48, 15, 0xffffffcc, 1);
-  if (time < 5 && !won) sb.text("A D to move   Space to jump   S to drop through planks", w / 2, h - 46, 18, 0xffffffdd, 0.5);
+  const u = eng.dpr, icon = Math.max(1, Math.round(2 * u)) * 16;
+  for (let i = 0; i < 3; i++) sb.draw(i < P.hearts ? heartF : heartEmpty, Math.round(14 * u) + i * (icon + Math.round(2 * u)), Math.round(14 * u), icon, icon, { ox: 0, oy: 0 });
+  sb.draw(coinF[0], Math.round(14 * u), Math.round(20 * u) + icon, icon, icon, { ox: 0, oy: 0 });
+  sb.text(`${coinsGot} / ${coins.length}`, Math.round(18 * u) + icon, Math.round(22 * u) + icon, 22 * u, 0xffffffff);
+  sb.text(`${time.toFixed(1)} s`, w - 24 * u, 20 * u, 22 * u, 0xffffffff, 1);
+  if (deaths) sb.text(`${deaths} ${deaths === 1 ? "restart" : "restarts"}`, w - 24 * u, 48 * u, 15 * u, 0xffffffcc, 1);
+  if (time < 5 && !won) sb.text("A D to move   Space to jump   Shift to run   S to drop through planks", w / 2, h - 46 * u, 18 * u, 0xffffffdd, 0.5);
   if (won) {
-    sb.rect(w / 2 - 230, h / 2 - 60, 460, 120, 0x000000aa);
-    sb.text("Level complete", w / 2, h / 2 - 44, 34, 0xffe08aff, 0.5);
-    sb.text(`${coinsGot} of ${coins.length} coins in ${time.toFixed(1)} s.  R to replay`, w / 2, h / 2 + 8, 18, 0xffffffff, 0.5);
+    sb.rect(w / 2 - 230 * u, h / 2 - 60 * u, 460 * u, 120 * u, 0x000000aa);
+    sb.text("Level complete", w / 2, h / 2 - 44 * u, 34 * u, 0xffe08aff, 0.5);
+    sb.text(`${coinsGot} of ${coins.length} coins in ${time.toFixed(1)} s.  R to replay`, w / 2, h / 2 + 8 * u, 18 * u, 0xffffffff, 0.5);
   }
 }
 

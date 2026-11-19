@@ -4,316 +4,172 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>vaughnponcee</title>
-<meta name="description" content="Small, fast tools with no dependencies. Local AI, game systems, graphics and developer utilities.">
+<meta name="description" content="Tools, engines and games.">
 <style>
-:root{
-  --bg:#ecebe7; --card:#f6f5f2; --raise:#fbfaf8; --ink:#1d1e20; --mute:#6b6c6f; --line:#dcdad3;
-  --accent:#4f6f5b; --accent-soft:#dfe6df;
-  --shadow:0 1px 2px rgba(30,28,24,.05),0 10px 30px rgba(30,28,24,.07);
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  --ease:cubic-bezier(.2,.7,.2,1);
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#17181a; --card:#1f2023; --raise:#26272b; --ink:#ecebe7; --mute:#9a9a9d; --line:#2e2f33;
-  --accent:#9cbca7; --accent-soft:#263029; --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.28); color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#17181a; --card:#1f2023; --raise:#26272b; --ink:#ecebe7; --mute:#9a9a9d; --line:#2e2f33;
-  --accent:#9cbca7; --accent-soft:#263029; --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px rgba(0,0,0,.28); color-scheme:dark}
+:root{--bg:#fff;--ink:#0d0d0d;--mute:#666;--line:#e6e6e6;--soft:#f6f6f6;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--ink:#ededed;--mute:#9b9b9b;--line:#262626;--soft:#111;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#000;--ink:#ededed;--mute:#9b9b9b;--line:#262626;--soft:#111;color-scheme:dark}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
-/* matte grain */
-body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.05;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
 a{color:inherit}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
-.wrap{max-width:1200px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:6px}
 
-/* nav */
-nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:color-mix(in srgb,var(--bg) 78%,transparent);border-bottom:1px solid transparent;transition:border-color .3s}
-nav.scrolled{border-bottom-color:var(--line)}
-nav .wrap{display:flex;justify-content:space-between;align-items:center;height:64px}
-.logo{font-weight:700;letter-spacing:-.02em;text-decoration:none;display:flex;align-items:center;gap:10px}
-.logo i{width:26px;height:26px;border-radius:8px;background:var(--ink);display:grid;place-items:center;color:var(--bg);font-style:normal;font-size:13px}
-.links{display:flex;gap:4px;align-items:center}
-.links a,.links button{font:500 14px var(--sans);color:var(--mute);text-decoration:none;padding:8px 12px;border-radius:999px;background:none;border:0;cursor:pointer;transition:color .2s,background .2s}
-.links a:hover,.links button:hover{color:var(--ink);background:var(--card)}
+nav{display:flex;justify-content:space-between;align-items:center;padding:22px clamp(16px,4vw,40px)}
+nav .name{font-weight:600;text-decoration:none;font-size:17px}
+nav .links{display:flex;gap:clamp(14px,3vw,28px);align-items:center}
+nav .links a,nav button{text-decoration:none;font:inherit;font-size:16px;color:var(--ink);background:none;border:0;padding:0;cursor:pointer}
+nav .links a:hover{text-decoration:underline;text-underline-offset:4px}
+nav button{color:var(--mute);display:grid}
 
-/* hero */
-.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:56px;align-items:center;padding:72px 0 88px}
-h1{margin:0 0 20px;font-size:clamp(40px,6.2vw,72px);line-height:1;letter-spacing:-.045em;font-weight:700}
-h1 span{color:var(--mute)}
-.intro{margin:0 0 28px;font-size:18px;color:var(--mute);max-width:46ch}
-.actions{display:flex;flex-wrap:wrap;gap:10px}
-.btn{display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 22px;border-radius:999px;font:600 15px var(--sans);text-decoration:none;border:1px solid var(--line);background:var(--raise);color:var(--ink);cursor:pointer;transition:transform .2s var(--ease),border-color .2s}
-.btn:hover{transform:translateY(-2px);border-color:var(--mute)}
-.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.btn svg{width:17px;height:17px}
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:40px}
-.stat{background:var(--card);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow)}
-.stat b{display:block;font-size:28px;letter-spacing:-.03em;font-weight:650;font-variant-numeric:tabular-nums}
-.stat span{font-size:13px;color:var(--mute)}
+main{max-width:640px;margin:0 auto;padding:0 16px}
+.hero{padding:clamp(56px,12vh,120px) 0 64px}
+h1{margin:0 0 14px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.hero p{margin:0 0 32px;font-size:18px;color:var(--ink);opacity:.85}
+.btn{display:inline-block;background:var(--ink);color:var(--bg);text-decoration:none;font-size:16px;padding:10px 22px;border-radius:999px;transition:opacity .2s}
+.btn:hover{opacity:.8}
 
-.stack{position:relative;aspect-ratio:1/1;max-width:560px;justify-self:end;width:100%}
-.stack img{position:absolute;border-radius:18px;box-shadow:0 20px 50px rgba(0,0,0,.28);object-fit:cover;border:4px solid var(--card);transition:transform .6s var(--ease)}
-.stack .a{width:78%;aspect-ratio:16/9;top:4%;left:0;transform:rotate(-4deg);animation:float 7s ease-in-out infinite}
-.stack .b{width:52%;aspect-ratio:1;bottom:2%;right:0;transform:rotate(5deg);image-rendering:pixelated;animation:float 8s ease-in-out -2s infinite}
-.stack .c{width:58%;aspect-ratio:3/2;bottom:12%;left:6%;transform:rotate(2deg);animation:float 9s ease-in-out -4s infinite}
-.stack:hover .a{transform:rotate(-6deg) translate(-10px,-8px)}
-.stack:hover .b{transform:rotate(8deg) translate(10px,6px)}
-@keyframes float{50%{translate:0 -10px}}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding-bottom:88px}
+.stats b{display:block;font-size:30px;font-weight:500;letter-spacing:-.01em;line-height:1.2}
+.stats span{font-size:14px;color:var(--mute)}
 
-/* marquee */
-.band{border-block:1px solid var(--line);overflow:hidden;padding:18px 0;color:var(--mute);font-weight:500}
-.band .track{display:flex;gap:48px;width:max-content;animation:scroll 40s linear infinite}
-.band span{white-space:nowrap;display:flex;align-items:center;gap:48px}
-.band span::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
-@keyframes scroll{to{transform:translateX(-50%)}}
+section{padding-bottom:88px}
+h2{margin:0 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.sub{margin:0 0 24px;color:var(--mute);font-size:15.5px}
 
-/* sections */
-section{padding:96px 0 0}
-.head{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:32px}
-.kicker{font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin:0 0 8px}
-h2{margin:0;font-size:clamp(28px,3.6vw,40px);letter-spacing:-.03em;font-weight:650;line-height:1.1}
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.shots a{text-decoration:none;display:block}
+.shots .img{border:1px solid var(--line);border-radius:12px;overflow:hidden;aspect-ratio:16/10;background:var(--soft)}
+.shots img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+.shots a:hover img{transform:scale(1.03)}
+.shots .px{image-rendering:pixelated}
+.shots b{display:block;font-size:15px;font-weight:600;margin-top:10px}
+.shots span{font-size:14px;color:var(--mute)}
 
-/* featured: bento */
-.bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px}
-.shot{position:relative;border-radius:22px;overflow:hidden;background:#111;box-shadow:var(--shadow);text-decoration:none;color:#fff;min-height:300px;display:block}
-.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
-.shot:hover img{transform:scale(1.05)}
-.shot .cap{position:absolute;inset:auto 0 0 0;padding:60px 24px 22px;background:linear-gradient(transparent,rgba(0,0,0,.78));display:grid;gap:2px}
-.shot .cap b{font-size:20px;letter-spacing:-.01em}
-.shot .cap span{font-size:14.5px;opacity:.82}
-.shot .go{position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.14);backdrop-filter:blur(8px);display:grid;place-items:center;transition:transform .3s var(--ease),background .3s}
-.shot:hover .go{transform:rotate(45deg);background:rgba(255,255,255,.28)}
-.shot .go svg{width:16px;height:16px}
-.s1{grid-column:span 7;min-height:420px}.s2{grid-column:span 5;min-height:420px}.s3{grid-column:span 5}.s4{grid-column:span 7}
-.s2 img{image-rendering:pixelated}
+.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto}
+.tabs button{background:none;border:0;padding:0 0 10px;font:inherit;font-size:15px;color:var(--mute);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-pressed="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--ink)}
 
-/* filter + grid */
-.pills{display:flex;flex-wrap:wrap;gap:4px;background:var(--card);padding:5px;border-radius:999px;box-shadow:var(--shadow);position:relative}
-.pills button{position:relative;z-index:1;border:0;background:none;color:var(--mute);font:500 14px var(--sans);padding:8px 16px;border-radius:999px;cursor:pointer;transition:color .25s}
-.pills button[aria-pressed="true"]{color:var(--bg)}
-.pills .ind{position:absolute;z-index:0;top:5px;height:calc(100% - 10px);border-radius:999px;background:var(--ink);transition:left .35s var(--ease),width .35s var(--ease)}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.card{background:var(--card);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow);text-decoration:none;transition:transform .35s var(--ease),background .25s,opacity .3s;min-width:0}
-.card:hover{transform:translateY(-4px);background:var(--raise)}
-.card .top{display:flex;justify-content:space-between;align-items:center}
-.ico{width:42px;height:42px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
-.ico svg{width:20px;height:20px}
-.card .arr{width:18px;height:18px;color:var(--mute);transition:transform .3s var(--ease),color .3s}
-.card:hover .arr{transform:translate(3px,-3px);color:var(--ink)}
-.card h3{margin:0;font-size:18px;font-weight:650;letter-spacing:-.015em}
-.card p{margin:0;color:var(--mute);font-size:14.5px;flex:1}
-.metric{font-size:14px;border-top:1px solid var(--line);padding-top:14px;font-variant-numeric:tabular-nums}
-.metric b{color:var(--accent);font-weight:650}
-.tags{display:flex;gap:6px;font-size:12.5px;color:var(--mute)}
-.tags span{border:1px solid var(--line);border-radius:999px;padding:1px 10px}
-.card.out{display:none}
+.list{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.item{border:1px solid var(--line);border-radius:14px;padding:20px 22px;text-decoration:none;display:flex;flex-direction:column;gap:4px;transition:border-color .2s,background .2s}
+.item:hover{border-color:var(--mute);background:var(--soft)}
+.item b{font-size:16px;font-weight:600}
+.item p{margin:0;color:var(--mute);font-size:15px;line-height:1.55;flex:1}
+.item small{margin-top:10px;font-family:var(--mono);font-size:12.5px;color:var(--mute)}
+.item[hidden]{display:none}
 
-/* process */
-.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.step{background:var(--card);border-radius:20px;padding:28px;box-shadow:var(--shadow)}
-.step b{display:block;font-size:40px;font-weight:700;letter-spacing:-.04em;color:var(--accent);line-height:1;margin-bottom:16px}
-.step h3{margin:0 0 6px;font-size:18px}
-.step p{margin:0;color:var(--mute);font-size:15px}
+.contact p{margin:0 0 20px;color:var(--mute)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn.line{background:none;color:var(--ink);border:1px solid var(--line)}
+.btn.line:hover{border-color:var(--ink);opacity:1}
 
-/* contact */
-.contact{margin-top:96px;background:var(--ink);color:var(--bg);border-radius:28px;padding:clamp(32px,6vw,64px);display:grid;grid-template-columns:minmax(0,1.4fr) auto;gap:32px;align-items:center;position:relative;overflow:hidden}
-.contact::after{content:"";position:absolute;width:420px;height:420px;right:-120px;top:-160px;border-radius:50%;background:radial-gradient(circle,var(--accent) 0,transparent 65%);opacity:.35;animation:drift 12s ease-in-out infinite alternate}
-@keyframes drift{to{transform:translate(-80px,60px)}}
-.contact h2{font-size:clamp(30px,4.4vw,48px)}
-.contact p{margin:12px 0 0;opacity:.7;font-size:17px;max-width:44ch}
-.contact .actions{position:relative;z-index:1}
-.contact .btn{background:var(--bg);color:var(--ink);border-color:var(--bg)}
-.contact .btn.ghost{background:transparent;color:var(--bg);border-color:rgba(255,255,255,.25)}
-:root[data-theme="dark"] .contact .btn.ghost{border-color:rgba(0,0,0,.2)}
-footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:13.5px;color:var(--mute);padding:40px 0 48px}
+footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:28px clamp(16px,4vw,40px);font-size:13px;color:var(--mute)}
+footer a{text-decoration:none;margin-left:22px}
+footer a:hover{color:var(--ink)}
 
-/* reveal */
-.rv{opacity:0;transform:translateY(24px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
-.rv.in{opacity:1;transform:none}
-.hero .rv:nth-child(2){transition-delay:.08s}.hero .rv:nth-child(3){transition-delay:.16s}.hero .rv:nth-child(4){transition-delay:.24s}.hero .rv:nth-child(5){transition-delay:.32s}
-
-@media (max-width:960px){
-  .hero{grid-template-columns:1fr;gap:48px;padding-top:48px}
-  .stack{justify-self:center;max-width:480px}
-  .grid,.steps{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .s1,.s2,.s3,.s4{grid-column:span 12;min-height:300px}
-  .contact{grid-template-columns:1fr}
-}
-@media (max-width:620px){
-  .grid,.steps{grid-template-columns:1fr}
-  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .links a.hide{display:none}
-  section{padding-top:72px}
-}
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important}
-  .rv{opacity:1;transform:none}
-}
+.fade{opacity:0;transform:translateY(10px);transition:opacity .7s ease,transform .7s ease}
+.fade.in{opacity:1;transform:none}
+@media (max-width:600px){.shots,.list{grid-template-columns:1fr}.stats b{font-size:24px}footer a{margin:0 16px 0 0}}
+@media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}.shots img{transition:none}}
 </style>
 </head>
 <body>
-<nav id="nav"><div class="wrap">
-  <a class="logo" href="#top"><i>v</i>vaughnponcee</a>
+<nav>
+  <a class="name" href="#">vaughnponcee</a>
   <div class="links">
-    <a class="hide" href="#work">Work</a>
-    <a class="hide" href="#projects">Projects</a>
+    <a href="https://github.com/vaughnponcee">GitHub</a>
+    <a href="#projects">Projects</a>
     <a href="#contact">Contact</a>
-    <button type="button" id="theme" aria-label="Toggle theme"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Zm0 1.5v11a5.5 5.5 0 0 1 0-11Z"/></svg></button>
+    <button type="button" id="theme" aria-label="Toggle theme"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
   </div>
-</div></nav>
+</nav>
 
-<main class="wrap" id="top">
-<header class="hero">
-  <div>
-    <h1 class="rv">Small, fast tools.<br><span>No dependencies.</span></h1>
-    <p class="intro rv">I build local AI tooling, game systems, graphics and developer utilities in Python, TypeScript and Rust. Every project ships with tests and benchmarks measured on real hardware.</p>
-    <div class="actions rv">
-      <a class="btn primary" href="#projects">See projects<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3v10M4 9l4 4 4-4"/></svg></a>
-      <a class="btn" href="https://github.com/vaughnponcee"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>GitHub</a>
-    </div>
-    <div class="stats rv">
-      <div class="stat"><b data-count="14">14</b><span>projects</span></div>
-      <div class="stat"><b data-count="330">330</b><span>tests passing</span></div>
-      <div class="stat"><b data-count="9.9" data-suffix="k">9.9k</b><span>lines of code</span></div>
-      <div class="stat"><b>0</b><span>dependencies</span></div>
-    </div>
-  </div>
-  <div class="stack rv" aria-hidden="true">
-    <img class="c" src="assets/ticknet.png" alt="">
-    <img class="a" src="assets/raycast.png" alt="">
-    <img class="b" src="assets/terrain.png" alt="">
-  </div>
-</header>
-</main>
-
-<div class="band" aria-hidden="true"><div class="track" id="band"></div></div>
-
-<main class="wrap">
-<section id="work">
-  <div class="head rv"><div><p class="kicker">Featured</p><h2>Things you can see running</h2></div></div>
-  <div class="bento">
-    <a class="shot s1 rv" href="https://github.com/vaughnponcee/raycast-rs"><img src="assets/raycast.png" alt="Textured maze with a barrel, lamps and a green portal" loading="lazy"><span class="go"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 11 11 5M6 5h5v5"/></svg></span><div class="cap"><b>raycast-rs</b><span>Software raycaster in Rust. 68 KB of wasm, 4.3 ms per frame.</span></div></a>
-    <a class="shot s2 rv" href="https://github.com/vaughnponcee/terra-gen"><img src="assets/terrain.png" alt="Eroded island terrain" loading="lazy"><span class="go"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 11 11 5M6 5h5v5"/></svg></span><div class="cap"><b>terra-gen</b><span>Procedural islands shaped by 49,152 erosion droplets.</span></div></a>
-    <a class="shot s3 rv" href="https://github.com/vaughnponcee/tiny-ecs-engine"><img src="assets/ecs.png" alt="Arena shooter with hundreds of asteroids" loading="lazy"><span class="go"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 11 11 5M6 5h5v5"/></svg></span><div class="cap"><b>tiny-ecs-engine</b><span>543 entities at 0.18 ms per step.</span></div></a>
-    <a class="shot s4 rv" href="https://github.com/vaughnponcee/tick-net"><img src="assets/ticknet.png" alt="Raw versus predicted movement" loading="lazy"><span class="go"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 11 11 5M6 5h5v5"/></svg></span><div class="cap"><b>tick-net</b><span>Client prediction takes input lag from 297 ms to 0.</span></div></a>
-  </div>
-</section>
-
-<section id="projects">
-  <div class="head rv">
-    <div><p class="kicker">All projects</p><h2>Fourteen repos, zero dependencies</h2></div>
-    <div class="pills" role="group" aria-label="Filter by category" id="filters">
-      <span class="ind" id="ind"></span>
-      <button type="button" data-cat="all" aria-pressed="true">All</button>
-      <button type="button" data-cat="ai" aria-pressed="false">AI</button>
-      <button type="button" data-cat="game" aria-pressed="false">Games</button>
-      <button type="button" data-cat="gfx" aria-pressed="false">Graphics</button>
-      <button type="button" data-cat="sys" aria-pressed="false">Systems</button>
-      <button type="button" data-cat="tools" aria-pressed="false">Tools</button>
-    </div>
-  </div>
-  <div class="grid" id="cards"></div>
-</section>
-
-<section>
-  <div class="head rv"><div><p class="kicker">How I work</p><h2>Measured, not guessed</h2></div></div>
-  <div class="steps">
-    <div class="step rv"><b>01</b><h3>Standard library first</h3><p>No frameworks to install. Clone it, run it, read every line.</p></div>
-    <div class="step rv"><b>02</b><h3>Tested on real inputs</h3><p>330 tests across the repos, plus fuzzing and crash tests where it matters.</p></div>
-    <div class="step rv"><b>03</b><h3>Honest READMEs</h3><p>Every repo lists its benchmarks, the bugs testing caught, and its limits.</p></div>
-  </div>
-</section>
-
-<div class="contact rv" id="contact">
-  <div><h2>Let's build something.</h2><p>Open to collaboration on tools, engines and local AI.</p></div>
-  <div class="actions">
-    <button class="btn" type="button" id="copy">Copy email</button>
-    <a class="btn ghost" href="https://github.com/vaughnponcee">GitHub</a>
-  </div>
+<main>
+<div class="hero fade">
+  <h1>I build tools, engines and games.</h1>
+  <p>Game systems, graphics, local AI and developer tooling. I pick whatever language fits the problem, and every project ships with tests and real benchmarks.</p>
+  <a class="btn" href="#projects">View projects</a>
 </div>
 
-<footer><span>vaughnponcee</span><span>Static page. No trackers.</span></footer>
+<div class="stats fade">
+  <div><b id="n-proj">14</b><span>projects</span></div>
+  <div><b>330</b><span>tests passing</span></div>
+  <div><b>0</b><span>dependencies</span></div>
+</div>
+
+<section class="fade">
+  <h2>Featured</h2>
+  <p class="sub">Screenshots from the running builds.</p>
+  <div class="shots">
+    <a href="https://github.com/vaughnponcee/raycast-rs"><div class="img"><img src="assets/raycast.png" alt="Textured maze with lamps and a green portal" loading="lazy"></div><b>raycast-rs</b><span>Software raycaster compiled to WebAssembly</span></a>
+    <a href="https://github.com/vaughnponcee/terra-gen"><div class="img"><img class="px" src="assets/terrain.png" alt="Eroded island terrain" loading="lazy"></div><b>terra-gen</b><span>Procedural terrain with erosion</span></a>
+    <a href="https://github.com/vaughnponcee/tiny-ecs-engine"><div class="img"><img src="assets/ecs.png" alt="Arena shooter with hundreds of asteroids" loading="lazy"></div><b>tiny-ecs-engine</b><span>ECS powering a 543 entity shooter</span></a>
+    <a href="https://github.com/vaughnponcee/tick-net"><div class="img"><img src="assets/ticknet.png" alt="Raw versus predicted movement" loading="lazy"></div><b>tick-net</b><span>Multiplayer netcode with prediction</span></a>
+  </div>
+</section>
+
+<section id="projects" class="fade">
+  <h2>Projects</h2>
+  <p class="sub">Every repo, with one number that matters.</p>
+  <div class="tabs" id="tabs"></div>
+  <div class="list" id="list"></div>
+</section>
+
+<section id="contact" class="contact fade">
+  <h2>Contact</h2>
+  <p>Open to collaboration and freelance work.</p>
+  <div class="row">
+    <button class="btn" type="button" id="copy" style="border:0;cursor:pointer;font:inherit">Copy email</button>
+    <a class="btn line" href="https://github.com/vaughnponcee">GitHub</a>
+  </div>
+</section>
 </main>
+
+<footer><span>&copy; <span id="yr">2026</span> vaughnponcee</span><span><a href="https://github.com/vaughnponcee">GitHub</a><a href="#projects">Projects</a><a href="#contact">Contact</a></span></footer>
 
 <script>
 (function(){
-  var I={
-    ai:'<path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><rect x="7" y="7" width="10" height="10" rx="2"/>',
-    game:'<rect x="3" y="7" width="18" height="10" rx="5"/><path d="M8 10v4M6 12h4M16 11h.01M18 13h.01"/>',
-    gfx:'<path d="M3 17l6-6 4 4 3-3 5 5"/><rect x="3" y="4" width="18" height="16" rx="2"/>',
-    sys:'<rect x="4" y="4" width="16" height="6" rx="1.5"/><rect x="4" y="14" width="16" height="6" rx="1.5"/><path d="M8 7h.01M8 17h.01"/>',
-    tools:'<path d="M4 17l6-6M4 7l4 0M14 17h6M13 5l6 6"/>'
-  };
+  // Add a project: one line. Language can be anything (C++, C#, Lua...).
   var P=[
-    ["token-budget-guard","ai","Strips lockfiles, logs and build output, then packs a repo under a hard token cap.","80,358 to <b>1,299</b> tokens","Python","MCP"],
-    ["local-agent-bus","ai","Routes tasks to local models within a VRAM budget, with sandboxed tools and a tamper evident log.","<b>32</b> tests, hash chained audit","Python","OpenAI API"],
-    ["tiny-ecs-engine","game","Sparse set ECS with generational handles, a spatial hash and a fixed timestep loop.","<b>0.18 ms</b> per step, 543 entities","TypeScript","Canvas"],
-    ["tick-net","game","Authoritative server with prediction, reconciliation and a hand written WebSocket.","<b>0.72 ms</b> tick with 50 clients","TypeScript","WebSocket"],
-    ["economy-sim","game","Deterministic Monte Carlo sim that flags inflation, stalls and exploit loops.","500 players, 14 days in <b>9.3 s</b>","Python","Multiprocessing"],
-    ["raycast-rs","gfx","From scratch raycaster with textured walls, sprites and coloured lights. No crates.","<b>4.3 ms</b> per 640x360 frame","Rust","WebAssembly"],
-    ["terra-gen","gfx","Simplex terrain with domain warping, droplet erosion and biomes. Exports PNG and OBJ.","Imports cleanly into <b>Blender 5.1</b>","Python","OBJ"],
-    ["mesh-stress-harness","gfx","Generates hostile geometry and checks topology, scale and VRAM for asset pipelines.","Caught <b>4 of 4</b> planted defects","Python","Blender"],
-    ["log-kv","sys","Append only key value store with CRC records, atomic batches and crash safe compaction.","<b>0</b> keys lost on hard kill","Python","WAL"],
-    ["mini-vm","sys","Scripting language with closures, a 38 opcode stack VM, a REPL and stack traces.","<b>2.4M</b> instructions per second","Python","Bytecode"],
-    ["sys-pulse","sys","Terminal dashboard for processes, ports, GPU and local AI runtimes.","<b>41 ms</b> per sample","Python","TUI"],
-    ["byte-probe","tools","Diffs save files, finds changed values and carves embedded assets out of binaries.","Scans at <b>83 MiB/s</b>","Python","Binary"],
-    ["logdiff","tools","Compares two logs or traces and reports new errors, latency shifts and moved crashes.","About <b>25k</b> lines per second","Python","CLI"],
-    ["wave-synth","tools","Polyphonic synth with antialiased oscillators and biquad filters. Renders MIDI to WAV.","<b>4.3x</b> faster than real time","Python","Audio"]
+    ["token-budget-guard","AI","Packs a repo into an LLM context under a hard token cap.","80,358 to 1,299 tokens","Python"],
+    ["local-agent-bus","AI","Routes tasks to local models within a VRAM budget, with an audit log.","32 tests","Python"],
+    ["tiny-ecs-engine","Games","Sparse set ECS with a spatial hash and fixed timestep loop.","0.18 ms per step","TypeScript"],
+    ["tick-net","Games","Authoritative multiplayer server with client prediction.","0.72 ms tick, 50 clients","TypeScript"],
+    ["economy-sim","Games","Monte Carlo sim that finds inflation and exploit loops.","500 players in 9.3 s","Python"],
+    ["raycast-rs","Graphics","Software raycaster with textures, sprites and lights.","4.3 ms per frame","Rust"],
+    ["terra-gen","Graphics","Terrain with erosion and biomes, exports PNG and OBJ.","Blender ready","Python"],
+    ["mesh-stress-harness","Graphics","Stress tests 3D asset pipelines with hostile geometry.","4 of 4 defects caught","Python"],
+    ["log-kv","Systems","Crash safe key value store with compaction.","0 keys lost on kill","Python"],
+    ["mini-vm","Systems","Scripting language with closures and a bytecode VM.","2.4M ops per second","Python"],
+    ["sys-pulse","Systems","Terminal dashboard for processes, ports and GPU.","41 ms per sample","Python"],
+    ["byte-probe","Tools","Finds values in save files and carves embedded assets.","83 MiB/s","Python"],
+    ["logdiff","Tools","Diffs two logs and reports what actually changed.","25k lines per second","Python"],
+    ["wave-synth","Tools","Polyphonic synth that renders MIDI to WAV.","4.3x real time","Python"]
   ];
-  var svg=function(p){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';};
-  var grid=document.getElementById('cards');
-  grid.innerHTML=P.map(function(p,i){
-    return '<a class="card rv" style="transition-delay:'+(i%3*70)+'ms" data-cat="'+p[1]+'" href="https://github.com/vaughnponcee/'+p[0]+'">'+
-      '<div class="top"><span class="ico">'+svg(I[p[1]])+'</span><svg class="arr" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"/></svg></div>'+
-      '<h3>'+p[0]+'</h3><p>'+p[2]+'</p><div class="metric">'+p[3]+'</div><div class="tags"><span>'+p[4]+'</span><span>'+p[5]+'</span></div></a>';
-  }).join('');
+  var list=document.getElementById('list'),tabs=document.getElementById('tabs');
+  document.getElementById('n-proj').textContent=P.length;
+  document.getElementById('yr').textContent=new Date().getFullYear();
+  list.innerHTML=P.map(function(p){return '<a class="item" data-cat="'+p[1]+'" href="https://github.com/vaughnponcee/'+p[0]+'"><b>'+p[0]+'</b><p>'+p[2]+'</p><small>'+p[4]+' &middot; '+p[3]+'</small></a>';}).join('');
+  var cats=['All'];P.forEach(function(p){if(cats.indexOf(p[1])<0)cats.push(p[1]);});
+  tabs.innerHTML=cats.map(function(c,i){return '<button type="button" aria-pressed="'+(i===0)+'">'+c+'</button>';}).join('');
+  tabs.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    tabs.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});
+    list.querySelectorAll('.item').forEach(function(it){it.hidden=b.textContent!=='All'&&it.dataset.cat!==b.textContent;});});
 
-  var words=["Python","TypeScript","Rust","WebAssembly","Local AI","ECS","Netcode","Raycasting","Procedural terrain","Bytecode VMs","Storage engines","DSP"];
-  var half=words.map(function(w){return '<span>'+w+'</span>';}).join('');
-  document.getElementById('band').innerHTML=half+half;
+  var io='IntersectionObserver' in window?new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.08}):null;
+  document.querySelectorAll('.fade').forEach(function(el){io?io.observe(el):el.classList.add('in');});
 
-  // reveal on scroll
-  var io='IntersectionObserver' in window?new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -40px 0px'}):null;
-  document.querySelectorAll('.rv').forEach(function(el){io?io.observe(el):el.classList.add('in');});
-
-  // count up
-  document.querySelectorAll('[data-count]').forEach(function(el){
-    var end=parseFloat(el.dataset.count),suf=el.dataset.suffix||'',dec=String(end).indexOf('.')>-1?1:0,t0=null;
-    if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-    function f(t){if(!t0)t0=t;var k=Math.min(1,(t-t0)/1200);k=1-Math.pow(1-k,3);el.textContent=(end*k).toFixed(dec)+suf;if(k<1)requestAnimationFrame(f);}
-    el.textContent='0';setTimeout(function(){requestAnimationFrame(f);},300);
-  });
-
-  // nav border
-  var nav=document.getElementById('nav');
-  addEventListener('scroll',function(){nav.classList.toggle('scrolled',scrollY>8);},{passive:true});
-
-  // filter with sliding pill
-  var btns=[].slice.call(document.querySelectorAll('#filters button')),ind=document.getElementById('ind');
-  function move(b){ind.style.left=b.offsetLeft+'px';ind.style.width=b.offsetWidth+'px';}
-  btns.forEach(function(b){b.onclick=function(){
-    btns.forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});move(b);
-    grid.querySelectorAll('.card').forEach(function(c){c.classList.toggle('out',b.dataset.cat!=='all'&&c.dataset.cat!==b.dataset.cat);});
-  };});
-  move(btns[0]);addEventListener('resize',function(){move(btns.filter(function(b){return b.getAttribute('aria-pressed')==='true';})[0]);});
-
-  // theme
   var root=document.documentElement;
   try{var s=localStorage.getItem('theme');if(s)root.setAttribute('data-theme',s);}catch(e){}
-  document.getElementById('theme').onclick=function(){
-    var cur=root.getAttribute('data-theme');
-    var dark=cur?cur==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
-    var n=dark?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('theme',n);}catch(e){}
-  };
+  document.getElementById('theme').onclick=function(){var cur=root.getAttribute('data-theme');
+    var dark=cur?cur==='dark':matchMedia('(prefers-color-scheme: dark)').matches;var n=dark?'light':'dark';
+    root.setAttribute('data-theme',n);try{localStorage.setItem('theme',n);}catch(e){}};
   var copy=document.getElementById('copy');
-  copy.onclick=function(){
-    var t='zchroniclight@gmail.com';
+  copy.onclick=function(){var t='zchroniclight@gmail.com';
     function done(){copy.textContent='Copied';setTimeout(function(){copy.textContent='Copy email';},1500);}
-    if(navigator.clipboard)navigator.clipboard.writeText(t).then(done,function(){prompt('Email',t);});else prompt('Email',t);
-  };
+    if(navigator.clipboard)navigator.clipboard.writeText(t).then(done,function(){prompt('Email',t);});else prompt('Email',t);};
 })();
 </script>
 </body>

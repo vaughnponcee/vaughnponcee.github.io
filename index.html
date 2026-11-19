@@ -24,25 +24,45 @@ nav .links a:hover{text-decoration:underline;text-underline-offset:4px}
 nav button{color:var(--mute);display:grid}
 
 main{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
-.top{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:64px;align-items:end;padding:clamp(80px,14vh,150px) 0 120px;border-bottom:1px solid var(--line);margin-bottom:110px}
+.top{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:64px;align-items:stretch;padding:clamp(80px,14vh,150px) 0 120px;margin-bottom:40px}
 .hero{padding:0}
+h1{position:relative}
+h1 .ghost{visibility:hidden}
+h1 .typed{position:absolute;inset:0;background:linear-gradient(180deg,var(--ink) 35%,var(--g2) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 .typed::after{content:"";display:inline-block;width:.09em;height:.82em;margin-left:.06em;vertical-align:-.04em;background:var(--ink);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
 .amp{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:400;text-transform:none}
-.top{position:relative;isolation:isolate}
+.top{position:relative;isolation:isolate;border-bottom:0!important}
 .top::before{content:"";position:absolute;z-index:-1;inset:-40px -10vw 0 30%;
   background-image:radial-gradient(circle,var(--dot) 1.5px,transparent 2px);background-size:10px 10px;
   -webkit-mask-image:radial-gradient(ellipse 60% 70% at 75% 45%,#000 0,transparent 70%);mask-image:radial-gradient(ellipse 60% 70% at 75% 45%,#000 0,transparent 70%);
   animation:ht 18s linear infinite}
 @keyframes ht{to{background-position:90px 45px}}
+/* halftone system */
+.ht-band{height:90px;margin:-30px 0 60px;background-image:radial-gradient(circle,var(--dot) 1.6px,transparent 2.1px);background-size:10px 10px;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 30%,#000 70%,transparent),linear-gradient(transparent,#000 50%,transparent);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(90deg,transparent,#000 30%,#000 70%,transparent),linear-gradient(transparent,#000 50%,transparent);mask-composite:intersect}
+section{position:relative;isolation:isolate}
+section h2::before{content:"";display:inline-block;width:22px;height:22px;margin-right:12px;vertical-align:-3px;border-radius:50%;
+  background-image:radial-gradient(circle,var(--ink) 1.2px,transparent 1.7px);background-size:5px 5px;-webkit-mask-image:radial-gradient(circle,#000 30%,transparent 72%);mask-image:radial-gradient(circle,#000 30%,transparent 72%)}
+.item{position:relative;overflow:hidden}
+.item::after{content:"";position:absolute;right:-30px;bottom:-30px;width:140px;height:140px;pointer-events:none;
+  background-image:radial-gradient(circle,var(--dot) 1.3px,transparent 1.8px);background-size:7px 7px;
+  -webkit-mask-image:radial-gradient(circle at 100% 100%,#000 0,transparent 65%);mask-image:radial-gradient(circle at 100% 100%,#000 0,transparent 65%);opacity:.5;transition:opacity .3s,transform .5s}
+.item:hover::after{opacity:1;transform:scale(1.25)}
+body{position:relative}
+.foot-ht{height:180px;background-image:radial-gradient(circle,var(--dot) 1.6px,transparent 2.1px);background-size:10px 10px;
+  -webkit-mask-image:linear-gradient(transparent,#000);mask-image:linear-gradient(transparent,#000)}
 .shots .img{position:relative}
 .shots .img::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(0,0,0,.35) .9px,transparent 1.3px);background-size:5px 5px;opacity:0;transition:opacity .4s}
 .shots a:hover .img::after{opacity:1}
 h1{margin:0 0 22px;font-family:"Arial Black","Segoe UI Black","Helvetica Neue",Impact,system-ui,sans-serif;font-weight:900;text-transform:uppercase;font-size:clamp(38px,5.6vw,76px);line-height:.95;letter-spacing:-.035em;
-  background:linear-gradient(180deg,var(--ink) 35%,var(--g2) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600;letter-spacing:-.01em}
+  color:var(--ink);font-weight:600;letter-spacing:-.01em}
 .hero p{margin:0 0 36px;font-size:19px;max-width:54ch;color:var(--ink);opacity:.85}
 .btn{display:inline-block;background:var(--ink);color:var(--bg);text-decoration:none;font-size:16px;padding:10px 22px;border-radius:999px;transition:opacity .2s}
 .btn:hover{opacity:.8}
 
-.stats{display:grid;grid-template-columns:1fr;gap:22px;padding:0 0 6px 40px;border-left:1px solid var(--line)}
+.stats{display:flex;flex-direction:column;justify-content:center;gap:28px;padding:24px 0 24px 48px;border-left:1px solid var(--line)}
 .stats b{display:block;font-size:40px;font-weight:500;letter-spacing:-.01em;line-height:1.2}
 .stats span{font-size:14px;color:var(--mute)}
 
@@ -81,7 +101,7 @@ h2{margin:0 0 6px;font-size:28px;font-weight:600;letter-spacing:-.01em}
 .btn.line{background:none;color:var(--ink);border:1px solid var(--line)}
 .btn.line:hover{border-color:var(--ink);opacity:1}
 
-footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid var(--line);padding:32px clamp(16px,4vw,40px);font-size:13px;color:var(--mute)}
+footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:32px clamp(16px,4vw,40px);font-size:13px;color:var(--mute)}
 footer a{text-decoration:none;margin-left:22px}
 footer a:hover{color:var(--ink)}
 
@@ -105,7 +125,7 @@ footer a:hover{color:var(--ink)}
 
 <main>
 <div class="top"><div class="hero fade">
-  <h1>I build tools, engines <span class="amp">&amp;</span> games.</h1>
+  <h1 aria-label="I build tools, engines and games."><span class="ghost" aria-hidden="true">I build tools, engines <span class="amp">&amp;</span> games.</span><span class="typed" id="typed" aria-hidden="true"></span></h1>
   <p>Game systems, graphics, local AI and developer tooling. I pick whatever language fits the problem, and every project ships with tests and real benchmarks.</p>
   <a class="btn" href="#projects">View projects</a>
 </div>
@@ -116,6 +136,7 @@ footer a:hover{color:var(--ink)}
   <div><b>0</b><span>dependencies</span></div>
 </div></div>
 
+<div class="ht-band" aria-hidden="true"></div>
 <section class="fade">
   <h2>Featured</h2>
   <p class="sub">Screenshots from the running builds.</p>
@@ -144,6 +165,7 @@ footer a:hover{color:var(--ink)}
 </section>
 </main>
 
+<div class="foot-ht" aria-hidden="true"></div>
 <footer><span>vaughnponcee</span><span><a href="https://github.com/vaughnponcee">GitHub</a><a href="#projects">Projects</a><a href="#contact">Contact</a></span></footer>
 
 <script>
@@ -165,6 +187,13 @@ footer a:hover{color:var(--ink)}
     ["logdiff","Tools","Diffs two logs and reports what actually changed.","25k lines per second","Python"],
     ["wave-synth","Tools","Polyphonic synth that renders MIDI to WAV.","4.3x real time","Python"]
   ];
+  (function(){var el=document.getElementById('typed');
+    var parts=[['I build tools, engines ',0],['&',1],[' games.',0]];
+    var full=[];parts.forEach(function(p){p[0].split('').forEach(function(ch){full.push([ch,p[1]]);});});
+    function render(n){var h='',amp=false;for(var i=0;i<n;i++){var c=full[i];if(c[1])h+='<span class="amp">&amp;</span>';else h+=c[0]==='<'?'&lt;':c[0];}el.innerHTML=h;}
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches){render(full.length);return;}
+    var n=0;render(0);setTimeout(function step(){n++;render(n);if(n<full.length)setTimeout(step,n%7===0?95:55);},450);
+  })();
   var list=document.getElementById('list'),tabs=document.getElementById('tabs');
   document.getElementById('n-proj').textContent=P.length;
   list.innerHTML=P.map(function(p){return '<a class="item" data-cat="'+p[1]+'" href="https://github.com/vaughnponcee/'+p[0]+'"><b>'+p[0]+'</b><p>'+p[2]+'</p><small>'+p[4]+' &middot; '+p[3]+'</small></a>';}).join('');

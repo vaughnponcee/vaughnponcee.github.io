@@ -57,8 +57,7 @@ h2{margin:0 0 6px;font-size:28px;font-weight:600;letter-spacing:-.01em}
 .shots{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px 24px}
 .shots a:first-child{grid-row:span 2}
 .shots a:first-child .img{aspect-ratio:auto;height:calc(100% - 52px)}
-.shots a:last-child{grid-column:span 2}
-.shots a:last-child .img{aspect-ratio:21/9}
+.shots a:first-child b{font-size:17px}
 .shots a{text-decoration:none;display:block}
 .shots .img{border:1px solid var(--line);border-radius:12px;overflow:hidden;aspect-ratio:16/10;background:var(--soft)}
 .shots img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
@@ -92,7 +91,7 @@ footer a:hover{color:var(--ink)}
 .fade{opacity:0;transform:translateY(10px);transition:opacity .7s ease,transform .7s ease}
 .fade.in{opacity:1;transform:none}
 @media (max-width:900px){.top{grid-template-columns:1fr;gap:40px}.stats{grid-template-columns:repeat(3,1fr);border-left:0;padding:0}.stats b{font-size:28px}.shots{grid-template-columns:1fr 1fr}.shots a:first-child{grid-row:auto;grid-column:span 2}.shots a:first-child .img{aspect-ratio:16/9;height:auto}.list{grid-template-columns:1fr 1fr}}
-@media (max-width:600px){.shots a:first-child,.shots a:last-child{grid-column:auto}.top{padding:56px 0 64px;margin-bottom:72px}section{padding-bottom:96px}.stats{grid-template-columns:1fr 1fr 1fr}.shots,.list{grid-template-columns:1fr}.stats b{font-size:24px}footer a{margin:0 16px 0 0}}
+@media (max-width:600px){.shots a:first-child{grid-column:auto}.top{padding:56px 0 64px;margin-bottom:72px}section{padding-bottom:96px}.stats{grid-template-columns:1fr 1fr 1fr}.shots,.list{grid-template-columns:1fr}.stats b{font-size:24px}footer a{margin:0 16px 0 0}}
 @media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}.shots img,.item::after{transition:none}}
 </style>
 </head>
@@ -120,6 +119,7 @@ footer a:hover{color:var(--ink)}
   <h2>Featured</h2>
   <p class="sub">Screenshots from the running builds.</p>
   <div class="shots">
+    <a href="ember/web/"><div class="img"><img src="assets/ember.png" alt="Crystal Run: an orange ball on a green arena with crates, glowing crystals and a stepped tower" loading="lazy"></div><b>ember &middot; play it in your browser</b><span>3D engine with physics, shadows and a demo game</span></a>
     <a href="https://github.com/vaughnponcee/raycast-rs"><div class="img"><img src="assets/raycast.png" alt="Textured maze with lamps and a green portal" loading="lazy"></div><b>raycast-rs</b><span>Software raycaster compiled to WebAssembly</span></a>
     <a href="https://github.com/vaughnponcee/terra-gen"><div class="img"><img class="px" src="assets/terrain.png" alt="Eroded island terrain" loading="lazy"></div><b>terra-gen</b><span>Procedural terrain with erosion</span></a>
     <a href="https://github.com/vaughnponcee/tiny-ecs-engine"><div class="img"><img src="assets/ecs.png" alt="Arena shooter with hundreds of asteroids" loading="lazy"></div><b>tiny-ecs-engine</b><span>ECS powering a 543 entity shooter</span></a>
@@ -152,6 +152,7 @@ footer a:hover{color:var(--ink)}
   var P=[
     ["token-budget-guard","AI","Packs a repo into an LLM context under a hard token cap.","80,358 to 1,299 tokens","Python"],
     ["local-agent-bus","AI","Routes tasks to local models within a VRAM budget, with an audit log.","32 tests","Python"],
+    ["ember","Games","3D engine on WebGL2 with physics, shadows and an ECS. Playable demo.","9 draw calls per frame","TypeScript"],
     ["tiny-ecs-engine","Games","Sparse set ECS with a spatial hash and fixed timestep loop.","0.18 ms per step","TypeScript"],
     ["tick-net","Games","Authoritative multiplayer server with client prediction.","0.72 ms tick, 50 clients","TypeScript"],
     ["economy-sim","Games","Monte Carlo sim that finds inflation and exploit loops.","500 players in 9.3 s","Python"],

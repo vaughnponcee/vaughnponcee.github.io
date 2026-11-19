@@ -33,29 +33,16 @@ h1 .typed::after{content:"";display:inline-block;width:.09em;height:.82em;margin
 @keyframes blink{50%{opacity:0}}
 .amp{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:400;text-transform:none}
 .top{position:relative;isolation:isolate;border-bottom:0!important}
-.top::before{content:"";position:absolute;z-index:-1;inset:-40px -10vw 0 30%;
-  background-image:radial-gradient(circle,var(--dot) 1.5px,transparent 2px);background-size:10px 10px;
-  -webkit-mask-image:radial-gradient(ellipse 60% 70% at 75% 45%,#000 0,transparent 70%);mask-image:radial-gradient(ellipse 60% 70% at 75% 45%,#000 0,transparent 70%);
-  animation:ht 18s linear infinite}
-@keyframes ht{to{background-position:90px 45px}}
 /* halftone system */
-.ht-band{height:90px;margin:-30px 0 60px;background-image:radial-gradient(circle,var(--dot) 1.6px,transparent 2.1px);background-size:10px 10px;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 30%,#000 70%,transparent),linear-gradient(transparent,#000 50%,transparent);-webkit-mask-composite:source-in;
-  mask-image:linear-gradient(90deg,transparent,#000 30%,#000 70%,transparent),linear-gradient(transparent,#000 50%,transparent);mask-composite:intersect}
 section{position:relative;isolation:isolate}
-section h2::before{content:"";display:inline-block;width:22px;height:22px;margin-right:12px;vertical-align:-3px;border-radius:50%;
-  background-image:radial-gradient(circle,var(--ink) 1.2px,transparent 1.7px);background-size:5px 5px;-webkit-mask-image:radial-gradient(circle,#000 30%,transparent 72%);mask-image:radial-gradient(circle,#000 30%,transparent 72%)}
 .item{position:relative;overflow:hidden}
 .item::after{content:"";position:absolute;right:-30px;bottom:-30px;width:140px;height:140px;pointer-events:none;
   background-image:radial-gradient(circle,var(--dot) 1.3px,transparent 1.8px);background-size:7px 7px;
   -webkit-mask-image:radial-gradient(circle at 100% 100%,#000 0,transparent 65%);mask-image:radial-gradient(circle at 100% 100%,#000 0,transparent 65%);opacity:.5;transition:opacity .3s,transform .5s}
 .item:hover::after{opacity:1;transform:scale(1.25)}
 body{position:relative}
-.foot-ht{height:180px;background-image:radial-gradient(circle,var(--dot) 1.6px,transparent 2.1px);background-size:10px 10px;
-  -webkit-mask-image:linear-gradient(transparent,#000);mask-image:linear-gradient(transparent,#000)}
 .shots .img{position:relative}
-.shots .img::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,rgba(0,0,0,.35) .9px,transparent 1.3px);background-size:5px 5px;opacity:0;transition:opacity .4s}
-.shots a:hover .img::after{opacity:1}
+
 h1{margin:0 0 22px;font-family:"Arial Black","Segoe UI Black","Helvetica Neue",Impact,system-ui,sans-serif;font-weight:900;text-transform:uppercase;font-size:clamp(38px,5.6vw,76px);line-height:.95;letter-spacing:-.035em;
   color:var(--ink);font-weight:600;letter-spacing:-.01em}
 .hero p{margin:0 0 36px;font-size:19px;max-width:54ch;color:var(--ink);opacity:.85}
@@ -109,8 +96,7 @@ footer a:hover{color:var(--ink)}
 .fade.in{opacity:1;transform:none}
 @media (max-width:900px){.top{grid-template-columns:1fr;gap:40px}.stats{grid-template-columns:repeat(3,1fr);border-left:0;padding:0}.stats b{font-size:28px}.shots{grid-template-columns:1fr 1fr}.shots a:first-child{grid-row:auto;grid-column:span 2}.shots a:first-child .img{aspect-ratio:16/9;height:auto}.list{grid-template-columns:1fr 1fr}}
 @media (max-width:600px){.shots a:first-child,.shots a:last-child{grid-column:auto}.top{padding:56px 0 64px;margin-bottom:72px}section{padding-bottom:96px}.stats{grid-template-columns:1fr 1fr 1fr}.shots,.list{grid-template-columns:1fr}.stats b{font-size:24px}footer a{margin:0 16px 0 0}}
-@media (prefers-reduced-motion:reduce){.top::before{animation:none}.fade{opacity:1;transform:none;transition:none}.shots img{transition:none}}
-</style>
+@media (prefers-reduced-motion:reduce){</style>
 </head>
 <body>
 <nav>
@@ -136,7 +122,6 @@ footer a:hover{color:var(--ink)}
   <div><b>0</b><span>dependencies</span></div>
 </div></div>
 
-<div class="ht-band" aria-hidden="true"></div>
 <section class="fade">
   <h2>Featured</h2>
   <p class="sub">Screenshots from the running builds.</p>
@@ -165,7 +150,6 @@ footer a:hover{color:var(--ink)}
 </section>
 </main>
 
-<div class="foot-ht" aria-hidden="true"></div>
 <footer><span>vaughnponcee</span><span><a href="https://github.com/vaughnponcee">GitHub</a><a href="#projects">Projects</a><a href="#contact">Contact</a></span></footer>
 
 <script>

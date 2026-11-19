@@ -93,7 +93,7 @@ footer a:hover{color:var(--ink)}
 .fade.in{opacity:1;transform:none}
 @media (max-width:900px){.top{grid-template-columns:1fr;gap:40px}.stats{grid-template-columns:repeat(3,1fr);border-left:0;padding:0}.stats b{font-size:28px}.shots{grid-template-columns:1fr 1fr}.shots a:first-child{grid-row:auto;grid-column:span 2}.shots a:first-child .img{aspect-ratio:16/9;height:auto}.list{grid-template-columns:1fr 1fr}}
 @media (max-width:600px){.shots a:first-child,.shots a:last-child{grid-column:auto}.top{padding:56px 0 64px;margin-bottom:72px}section{padding-bottom:96px}.stats{grid-template-columns:1fr 1fr 1fr}.shots,.list{grid-template-columns:1fr}.stats b{font-size:24px}footer a{margin:0 16px 0 0}}
-@media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}.shots img,.item::after{transition:none}h1 .typed::after{animation:none}}
+@media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}.shots img,.item::after{transition:none}}
 </style>
 </head>
 <body>
@@ -169,7 +169,6 @@ footer a:hover{color:var(--ink)}
     var parts=[['I build tools,|engines ',0],['&',1],['|games.',0]];
     var full=[];parts.forEach(function(p){p[0].split('').forEach(function(ch){full.push([ch,p[1]]);});});
     function render(n){var h='',amp=false;for(var i=0;i<n;i++){var c=full[i];if(c[1])h+='<span class="amp">&amp;</span>';else h+=c[0]==='|'?'<br>':c[0];}el.innerHTML=h;}
-    if(matchMedia('(prefers-reduced-motion: reduce)').matches){render(full.length);return;}
     var n=0;render(0);setTimeout(function step(){n++;render(n);if(n<full.length)setTimeout(step,n%7===0?95:55);},450);
   })();
   var list=document.getElementById('list'),tabs=document.getElementById('tabs');

@@ -23,22 +23,27 @@ nav .links a,nav button{text-decoration:none;font:inherit;font-size:16px;color:v
 nav .links a:hover{text-decoration:underline;text-underline-offset:4px}
 nav button{color:var(--mute);display:grid}
 
-main{max-width:760px;margin:0 auto;padding:0 16px}
-.hero{padding:clamp(80px,16vh,160px) 0 88px}
-h1{margin:0 0 14px;font-size:22px;font-weight:600;letter-spacing:-.01em}
-.hero p{margin:0 0 40px;font-size:18px;color:var(--ink);opacity:.85}
+main{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+.top{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:64px;align-items:end;padding:clamp(80px,14vh,150px) 0 120px;border-bottom:1px solid var(--line);margin-bottom:110px}
+.hero{padding:0}
+h1{margin:0 0 18px;font-size:clamp(32px,4.4vw,52px);line-height:1.08;letter-spacing:-.03em;font-weight:600;letter-spacing:-.01em}
+.hero p{margin:0 0 36px;font-size:19px;max-width:54ch;color:var(--ink);opacity:.85}
 .btn{display:inline-block;background:var(--ink);color:var(--bg);text-decoration:none;font-size:16px;padding:10px 22px;border-radius:999px;transition:opacity .2s}
 .btn:hover{opacity:.8}
 
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding-bottom:140px}
-.stats b{display:block;font-size:30px;font-weight:500;letter-spacing:-.01em;line-height:1.2}
+.stats{display:grid;grid-template-columns:1fr;gap:22px;padding:0 0 6px 40px;border-left:1px solid var(--line)}
+.stats b{display:block;font-size:40px;font-weight:500;letter-spacing:-.01em;line-height:1.2}
 .stats span{font-size:14px;color:var(--mute)}
 
 section{padding-bottom:140px}
-h2{margin:0 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+h2{margin:0 0 6px;font-size:28px;font-weight:600;letter-spacing:-.01em}
 .sub{margin:0 0 36px;color:var(--mute);font-size:15.5px}
 
-.shots{display:grid;grid-template-columns:1fr 1fr;gap:40px 24px}
+.shots{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px 24px}
+.shots a:first-child{grid-row:span 2}
+.shots a:first-child .img{aspect-ratio:auto;height:calc(100% - 52px)}
+.shots a:last-child{grid-column:span 2}
+.shots a:last-child .img{aspect-ratio:21/9}
 .shots a{text-decoration:none;display:block}
 .shots .img{border:1px solid var(--line);border-radius:12px;overflow:hidden;aspect-ratio:16/10;background:var(--soft)}
 .shots img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
@@ -52,7 +57,7 @@ h2{margin:0 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
 .tabs button:hover{color:var(--ink)}
 .tabs button[aria-pressed="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--ink)}
 
-.list{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 .item{border:1px solid var(--line);border-radius:14px;padding:26px 28px;text-decoration:none;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,background .2s}
 .item:hover{border-color:var(--mute);background:var(--soft)}
 .item b{font-size:16px;font-weight:600}
@@ -71,7 +76,8 @@ footer a:hover{color:var(--ink)}
 
 .fade{opacity:0;transform:translateY(10px);transition:opacity .7s ease,transform .7s ease}
 .fade.in{opacity:1;transform:none}
-@media (max-width:600px){.stats,section{padding-bottom:96px}.hero{padding:64px 0 64px}.shots,.list{grid-template-columns:1fr}.stats b{font-size:24px}footer a{margin:0 16px 0 0}}
+@media (max-width:900px){.top{grid-template-columns:1fr;gap:40px}.stats{grid-template-columns:repeat(3,1fr);border-left:0;padding:0}.stats b{font-size:28px}.shots{grid-template-columns:1fr 1fr}.shots a:first-child{grid-row:auto;grid-column:span 2}.shots a:first-child .img{aspect-ratio:16/9;height:auto}.list{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.shots a:first-child,.shots a:last-child{grid-column:auto}.top{padding:56px 0 64px;margin-bottom:72px}section{padding-bottom:96px}.stats{grid-template-columns:1fr 1fr 1fr}.shots,.list{grid-template-columns:1fr}.stats b{font-size:24px}footer a{margin:0 16px 0 0}}
 @media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}.shots img{transition:none}}
 </style>
 </head>
@@ -87,7 +93,7 @@ footer a:hover{color:var(--ink)}
 </nav>
 
 <main>
-<div class="hero fade">
+<div class="top"><div class="hero fade">
   <h1>I build tools, engines and games.</h1>
   <p>Game systems, graphics, local AI and developer tooling. I pick whatever language fits the problem, and every project ships with tests and real benchmarks.</p>
   <a class="btn" href="#projects">View projects</a>
@@ -97,7 +103,7 @@ footer a:hover{color:var(--ink)}
   <div><b id="n-proj">14</b><span>projects</span></div>
   <div><b>330</b><span>tests passing</span></div>
   <div><b>0</b><span>dependencies</span></div>
-</div>
+</div></div>
 
 <section class="fade">
   <h2>Featured</h2>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>vaughnponcee</title>
-<meta name="description" content="Tools, engines and games.">
+<meta name="description" content="Tools, engines, games and websites.">
 <style>
 :root{--g2:#9a9a9a;--dot:rgba(0,0,0,.24);--bg:#fff;--ink:#0d0d0d;--mute:#666;--line:#e6e6e6;--soft:#f6f6f6;
   --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -12,7 +12,7 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--ink:#ededed;--mute:#9b9b9b;--line:#262626;--soft:#111;--g2:#5a5a5a;--dot:rgba(255,255,255,.32);color-scheme:dark}}
 :root[data-theme="dark"]{--g2:#5a5a5a;--dot:rgba(255,255,255,.32);--bg:#000;--ink:#ededed;--mute:#9b9b9b;--line:#262626;--soft:#111;color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+body{-webkit-user-select:none;user-select:none;margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
 a{color:inherit}
 :focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:6px}
 
@@ -43,7 +43,7 @@ section{position:relative;isolation:isolate}
 body{position:relative}
 .shots .img{position:relative}
 
-h1{margin:0 0 34px;font-family:"Arial Black","Segoe UI Black","Helvetica Neue",Impact,system-ui,sans-serif;font-weight:900;text-transform:uppercase;font-size:clamp(34px,7.4vw,104px);line-height:.95;letter-spacing:-.035em;
+h1{margin:0 0 34px;font-family:"Arial Black","Segoe UI Black","Helvetica Neue",Impact,system-ui,sans-serif;font-weight:900;text-transform:uppercase;font-size:clamp(20px,5.2vw,86px);white-space:nowrap;line-height:.95;letter-spacing:-.035em;
   color:var(--ink);font-weight:600;letter-spacing:-.01em}
 .hero p{margin:0 auto 36px;font-size:19px;max-width:54ch;color:var(--ink);opacity:.85}
 .btn{display:inline-block;background:var(--ink);color:var(--bg);text-decoration:none;font-size:16px;padding:10px 22px;border-radius:999px;transition:opacity .2s}
@@ -60,7 +60,7 @@ h2{margin:0 0 28px;font-size:28px;font-weight:600;letter-spacing:-.01em}
 .shots .tile:first-child .cover{flex:1;display:flex;flex-direction:column}
 .shots .tile:first-child .img{aspect-ratio:auto;flex:1;min-height:260px}
 .shots .tile:first-child b{font-size:17px}
-.shots .tile{display:block}
+.shots .tile{display:block;min-width:0}
 .shots .cover{text-decoration:none;display:block}
 .shots .tile > span a{color:var(--ink)}
 .badge{position:absolute;left:12px;top:12px;background:var(--bg);color:var(--ink);font-size:12.5px;font-weight:600;padding:3px 10px;border-radius:999px;opacity:.92}
@@ -98,6 +98,7 @@ footer a:hover{color:var(--ink)}
 @media (max-width:900px){.top{grid-template-columns:1fr;gap:40px}.stats{grid-template-columns:repeat(3,1fr);border-left:0;padding:0}.stats b{font-size:28px}.shots{grid-template-columns:1fr 1fr}.shots .tile:first-child{grid-row:auto;grid-column:span 2}.shots .tile:first-child .img{aspect-ratio:16/9;height:auto}.list{grid-template-columns:1fr 1fr}}
 @media (max-width:600px){.shots .tile:first-child{grid-column:auto}.top{padding:56px 0 64px;margin-bottom:72px}section{padding-bottom:96px}.stats{grid-template-columns:1fr 1fr 1fr}.shots,.list{grid-template-columns:1fr}.stats b{font-size:24px}footer a{margin:0 16px 0 0}}
 @media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}.shots img,.item::after{transition:none}}
+img{-webkit-user-drag:none;user-drag:none}
 </style>
 </head>
 <body>
@@ -113,7 +114,7 @@ footer a:hover{color:var(--ink)}
 
 <main>
 <div class="top"><div class="hero fade">
-  <h1 aria-label="I build tools, engines and games."><span class="ghost" aria-hidden="true">I build tools,<br>engines <span class="amp">&amp;</span><br>games.</span><span class="typed" id="typed" aria-hidden="true"></span></h1>
+  <h1 aria-label="I build tools, engines, games and websites."><span class="ghost" aria-hidden="true">I build tools, engines,<br>games <span class="amp">&amp;</span> websites.</span><span class="typed" id="typed" aria-hidden="true"></span></h1>
   <p>Game systems, graphics, local AI and developer tooling. I pick whatever language fits the problem, and every project ships with tests and real benchmarks.</p>
   <a class="btn" href="#projects">View projects</a>
 </div>
@@ -171,7 +172,7 @@ footer a:hover{color:var(--ink)}
     ["wave-synth","Tools","Polyphonic synth that renders MIDI to WAV.","4.3x real time","Python"]
   ];
   (function(){var el=document.getElementById('typed');
-    var parts=[['I build tools,|engines ',0],['&',1],['|games.',0]];
+    var parts=[['I build tools, engines,|games ',0],['&',1],[' websites.',0]];
     var full=[];parts.forEach(function(p){p[0].split('').forEach(function(ch){full.push([ch,p[1]]);});});
     function render(n){var h='',amp=false;for(var i=0;i<n;i++){var c=full[i];if(c[1])h+='<span class="amp">&amp;</span>';else h+=c[0]==='|'?'<br>':c[0];}el.innerHTML=h;}
     var n=0;render(0);setTimeout(function step(){n++;render(n);if(n<full.length)setTimeout(step,n%7===0?95:55);},450);

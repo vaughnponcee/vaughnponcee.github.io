@@ -24,7 +24,7 @@ nav .links a:hover{text-decoration:underline;text-underline-offset:4px}
 nav button{color:var(--mute);display:grid}
 
 main{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
-.top{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:64px;align-items:stretch;padding:clamp(80px,14vh,150px) 0 120px;margin-bottom:40px}
+.top{display:block;text-align:center;padding:clamp(80px,14vh,150px) 0 120px;margin-bottom:40px}
 .hero{padding:0}
 h1{position:relative}
 h1 .ghost{visibility:hidden}
@@ -43,15 +43,12 @@ section{position:relative;isolation:isolate}
 body{position:relative}
 .shots .img{position:relative}
 
-h1{margin:0 0 22px;font-family:"Arial Black","Segoe UI Black","Helvetica Neue",Impact,system-ui,sans-serif;font-weight:900;text-transform:uppercase;font-size:clamp(38px,5.6vw,76px);line-height:.95;letter-spacing:-.035em;
+h1{margin:0 0 34px;font-family:"Arial Black","Segoe UI Black","Helvetica Neue",Impact,system-ui,sans-serif;font-weight:900;text-transform:uppercase;font-size:clamp(34px,7.4vw,104px);line-height:.95;letter-spacing:-.035em;
   color:var(--ink);font-weight:600;letter-spacing:-.01em}
-.hero p{margin:0 0 36px;font-size:19px;max-width:54ch;color:var(--ink);opacity:.85}
+.hero p{margin:0 auto 36px;font-size:19px;max-width:54ch;color:var(--ink);opacity:.85}
 .btn{display:inline-block;background:var(--ink);color:var(--bg);text-decoration:none;font-size:16px;padding:10px 22px;border-radius:999px;transition:opacity .2s}
 .btn:hover{opacity:.8}
 
-.stats{display:flex;flex-direction:column;justify-content:center;gap:28px;padding:24px 0 24px 48px;border-left:1px solid var(--line)}
-.stats b{display:block;font-size:40px;font-weight:500;letter-spacing:-.01em;line-height:1.2}
-.stats span{font-size:14px;color:var(--mute)}
 
 section{padding-bottom:140px}
 h2{margin:0 0 6px;font-size:28px;font-weight:600;letter-spacing:-.01em}
@@ -112,16 +109,12 @@ footer a:hover{color:var(--ink)}
 
 <main>
 <div class="top"><div class="hero fade">
-  <h1 aria-label="I build tools, engines and games."><span class="ghost" aria-hidden="true">I build tools, engines <span class="amp">&amp;</span> games.</span><span class="typed" id="typed" aria-hidden="true"></span></h1>
+  <h1 aria-label="I build tools, engines and games."><span class="ghost" aria-hidden="true">I build tools,<br>engines <span class="amp">&amp;</span><br>games.</span><span class="typed" id="typed" aria-hidden="true"></span></h1>
   <p>Game systems, graphics, local AI and developer tooling. I pick whatever language fits the problem, and every project ships with tests and real benchmarks.</p>
   <a class="btn" href="#projects">View projects</a>
 </div>
 
-<div class="stats fade">
-  <div><b id="n-proj">14</b><span>projects</span></div>
-  <div><b>330</b><span>tests passing</span></div>
-  <div><b>0</b><span>dependencies</span></div>
-</div></div>
+</div>
 
 <section class="fade">
   <h2>Featured</h2>
@@ -173,15 +166,14 @@ footer a:hover{color:var(--ink)}
     ["wave-synth","Tools","Polyphonic synth that renders MIDI to WAV.","4.3x real time","Python"]
   ];
   (function(){var el=document.getElementById('typed');
-    var parts=[['I build tools, engines ',0],['&',1],[' games.',0]];
+    var parts=[['I build tools,|engines ',0],['&',1],['|games.',0]];
     var full=[];parts.forEach(function(p){p[0].split('').forEach(function(ch){full.push([ch,p[1]]);});});
-    function render(n){var h='',amp=false;for(var i=0;i<n;i++){var c=full[i];if(c[1])h+='<span class="amp">&amp;</span>';else h+=c[0]==='<'?'&lt;':c[0];}el.innerHTML=h;}
+    function render(n){var h='',amp=false;for(var i=0;i<n;i++){var c=full[i];if(c[1])h+='<span class="amp">&amp;</span>';else h+=c[0]==='|'?'<br>':c[0];}el.innerHTML=h;}
     if(matchMedia('(prefers-reduced-motion: reduce)').matches){render(full.length);return;}
     var n=0;render(0);setTimeout(function step(){n++;render(n);if(n<full.length)setTimeout(step,n%7===0?95:55);},450);
   })();
   var list=document.getElementById('list'),tabs=document.getElementById('tabs');
-  document.getElementById('n-proj').textContent=P.length;
-  list.innerHTML=P.map(function(p){return '<a class="item" data-cat="'+p[1]+'" href="https://github.com/vaughnponcee/'+p[0]+'"><b>'+p[0]+'</b><p>'+p[2]+'</p><small>'+p[4]+' &middot; '+p[3]+'</small></a>';}).join('');
+    list.innerHTML=P.map(function(p){return '<a class="item" data-cat="'+p[1]+'" href="https://github.com/vaughnponcee/'+p[0]+'"><b>'+p[0]+'</b><p>'+p[2]+'</p><small>'+p[4]+' &middot; '+p[3]+'</small></a>';}).join('');
   var cats=['All'];P.forEach(function(p){if(cats.indexOf(p[1])<0)cats.push(p[1]);});
   tabs.innerHTML=cats.map(function(c,i){return '<button type="button" aria-pressed="'+(i===0)+'">'+c+'</button>';}).join('');
   tabs.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;

@@ -2,13 +2,13 @@
  * Moss Ledge: level data and player movement, with no DOM or rendering, so
  * tests can simulate the exact same physics the game runs.
  */
-import { Tilemap,           } from "../src/tilemap.js";
-import { damp, lerp } from "../src/math.js";
+import { Tilemap,           } from "../src/tilemap.js?v=122c782b";
+import { damp, lerp } from "../src/math.js?v=122c782b";
 
 export const TILE = 16;
 export const GRAV = 900, RUN = 110, RUN_MULT = 1.45, JUMP = 330, MAX_FALL = 420;
 /** Gravity multiplier while rising with the jump key released (short hop). */
-export const SHORT_HOP = 2.4;
+export const SHORT_HOP = 1.8;
 
 // Legend: # ground, = one-way plank, ^ spikes, o coin, s slime, C checkpoint, P start, F flag.
 // Design rule: a ledge is at most 3 tiles above where you jump from. A full jump peaks

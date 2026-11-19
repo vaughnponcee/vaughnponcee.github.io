@@ -7,7 +7,7 @@
  * load in games without an image pipeline.
  */
                                                                 
-import { Project } from "./project.js";
+import { Project } from "./project.js?v=122c782b";
 
                                                                                                   
 

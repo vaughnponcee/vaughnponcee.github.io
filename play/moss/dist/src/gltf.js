@@ -12,7 +12,7 @@
  * error). The first material's base colour is returned for tinting.
  */
                                           
-import { STRIDE } from "./mesh.js";
+import { STRIDE } from "./mesh.js?v=122c782b";
 
                                                                                                                                          
                                                                                                      

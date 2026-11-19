@@ -11,14 +11,14 @@
  *
  * F3 toggles a performance overlay. The tab being hidden pauses the loop.
  */
-import { World } from "./ecs.js";
-import { PhysicsWorld } from "./physics.js";
-import { Renderer,                        } from "./renderer.js";
-import { SpriteBatch } from "./sprites.js";
-import { FixedLoop } from "./loop.js";
-import { Input } from "./input.js";
-import { Sfx } from "./audio.js";
-import { box, cylinder, gem, plane, sphere } from "./mesh.js";
+import { World } from "./ecs.js?v=122c782b";
+import { PhysicsWorld } from "./physics.js?v=122c782b";
+import { Renderer,                        } from "./renderer.js?v=122c782b";
+import { SpriteBatch } from "./sprites.js?v=122c782b";
+import { FixedLoop } from "./loop.js?v=122c782b";
+import { Input } from "./input.js?v=122c782b";
+import { Sfx } from "./audio.js?v=122c782b";
+import { box, cylinder, gem, plane, sphere } from "./mesh.js?v=122c782b";
                                            
 
                        

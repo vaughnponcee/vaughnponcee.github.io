@@ -2,12 +2,12 @@
  * Demo: "Moss Ledge", a 2D platformer on ember's 2D layer.
  * Every sprite is painted into an atlas at startup, so there are no image files.
  */
-import { Engine } from "../src/engine.js";
-import { Camera2D,                              } from "../src/sprites.js";
-import {           } from "../src/tilemap.js";
-import { buildMap, entities, stepPlayer, TILE, GRAV } from "./moss.js";
-import { clamp, damp, lerp, rng } from "../src/math.js";
-import { Animator, Library, decodePixels, loadSprite } from "../src/assets.js";
+import { Engine } from "../src/engine.js?v=122c782b";
+import { Camera2D,                              } from "../src/sprites.js?v=122c782b";
+import {           } from "../src/tilemap.js?v=122c782b";
+import { buildMap, entities, stepPlayer, TILE, GRAV } from "./moss.js?v=122c782b";
+import { clamp, damp, lerp, rng } from "../src/math.js?v=122c782b";
+import { Animator, Library, decodePixels, loadSprite } from "../src/assets.js?v=122c782b";
 
 const canvas = document.getElementById("view")                     ;
 const eng = new Engine(canvas);

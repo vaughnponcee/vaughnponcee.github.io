@@ -6,7 +6,7 @@
  * size, rotation, origin, uv rect and a packed RGBA tint. Text uses a font
  * atlas generated at startup from the system font, so there are no font files.
  */
-import { ortho,           } from "./math.js";
+import { ortho,           } from "./math.js?v=122c782b";
 
                                                                     
 /** A region of a texture in pixels. */

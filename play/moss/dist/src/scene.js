@@ -8,8 +8,8 @@
                                               
                                                        
                                                                 
-import {            fromTRS, lerp, quatFromEuler } from "./math.js";
-import { fromBase64, parseModel } from "./gltf.js";
+import {            fromTRS, lerp, quatFromEuler } from "./math.js?v=122c782b";
+import { fromBase64, parseModel } from "./gltf.js?v=122c782b";
 
                                                                                            
                                                                  

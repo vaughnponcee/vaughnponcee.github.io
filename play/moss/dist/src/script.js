@@ -24,7 +24,7 @@
                                         
                                       
                                           
-import {                                                              spawnObject, S, T, M, B } from "./scene.js";
+import {                                                              spawnObject, S, T, M, B } from "./scene.js?v=122c782b";
                                       
 
                               

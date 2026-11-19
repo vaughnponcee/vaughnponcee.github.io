@@ -7,8 +7,8 @@
  * hemisphere ambient, up to 8 point lights, exponential height fog, ACES
  * tonemapping and sRGB output. Emissive instances bypass lighting.
  */
-import {                       frustumPlanes, invert, lookAt, multiply, normalize, ortho, perspective } from "./math.js";
-import {                STRIDE } from "./mesh.js";
+import {                       frustumPlanes, invert, lookAt, multiply, normalize, ortho, perspective } from "./math.js?v=122c782b";
+import {                STRIDE } from "./mesh.js?v=122c782b";
 
                                                                                                                    
                                                                                            

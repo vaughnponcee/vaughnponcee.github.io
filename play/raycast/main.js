@@ -8,7 +8,7 @@ const hud = document.getElementById("hud");
 const banner = document.getElementById("banner");
 const resSel = document.getElementById("res");
 
-const { instance } = await WebAssembly.instantiateStreaming(fetch("raycast.wasm"), {});
+const { instance } = await WebAssembly.instantiateStreaming(fetch("raycast.wasm?v=e99c8afc"), {});
 const rc = instance.exports;
 let [W, H] = RES[params.get("res") || "640x360"] || RES["640x360"];
 let seed = Number(params.get("seed")) || (Date.now() & 0xffff);

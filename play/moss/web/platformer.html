@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ember: Moss Ledge</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1114;overflow:hidden}
+  canvas{display:block;width:100vw;height:100vh;image-rendering:pixelated}
+  #err{position:fixed;left:16px;bottom:16px;color:#f88;font:13px ui-monospace,monospace;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<canvas id="view"></canvas>
+<pre id="err"></pre>
+<script>addEventListener("error", (e) => { document.getElementById("err").textContent = String(e.message); });</script>
+<script type="module" src="../dist/web/platformer.js"></script>
+</body>
+</html>

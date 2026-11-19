@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tick-net: raw vs reconciled</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #0a0b0d; color: #c9d1d9; font: 13px/1.5 ui-monospace, Consolas, monospace; }
+  main { max-width: 1660px; margin: 0 auto; padding: 14px; display: grid; gap: 12px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 900px) { .row { grid-template-columns: 1fr; } }
+  figure { margin: 0; display: grid; gap: 4px; min-width: 0; }
+  figcaption b { color: #e8e6e3; }
+  canvas { width: 100%; height: auto; aspect-ratio: 8 / 5; border: 1px solid #222831; display: block; }
+  .info { color: #8b949e; min-height: 1.5em; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+  button { font: inherit; background: #161a20; color: #c9d1d9; border: 1px solid #2d333b; padding: 3px 10px; cursor: pointer; }
+  button:hover { border-color: #8b949e; }
+  label { display: flex; gap: 6px; align-items: center; }
+  .legend span { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 12px; vertical-align: -1px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="controls">
+    <span>WASD / arrows move both players</span>
+    <span>link:</span>
+    <button id="p-lan">lan</button><button id="p-good">good</button><button id="p-bad">bad</button><button id="p-awful">awful</button>
+    <label>latency <input id="lat" type="range" min="0" max="400" step="5"></label>
+    <label>jitter <input id="jit" type="range" min="0" max="400" step="5"></label>
+    <label>loss % <input id="loss" type="range" min="0" max="40" step="1"></label>
+    <span id="cfg"></span>
+  </div>
+  <div class="row">
+    <figure>
+      <figcaption><b>raw</b>: draws only what the server sends (input delayed by a full round trip)</figcaption>
+      <canvas id="raw"></canvas>
+      <div class="info" id="raw-info"></div>
+    </figure>
+    <figure>
+      <figcaption><b>predicted + reconciled + interpolated</b>: white ring = last authoritative position</figcaption>
+      <canvas id="pred"></canvas>
+      <div class="info" id="pred-info"></div>
+    </figure>
+  </div>
+  <div class="legend"><span style="background:#e07a5f"></span>raw player<span style="background:#81b29a"></span>predicted player<span style="background:#5b6573"></span>bots / other clients (interpolated on the right)</div>
+</main>
+<script type="module" src="../dist/web/app.js"></script>
+</body>
+</html>

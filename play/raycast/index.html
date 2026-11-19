@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>raycast-rs</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #060607; color: #c9c5bd; font: 13px/1.5 ui-monospace, Consolas, monospace; }
+  main { max-width: 1280px; margin: 0 auto; padding: 12px; display: grid; gap: 8px; }
+  .stage { position: relative; }
+  canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; image-rendering: pixelated; background: #000; cursor: crosshair; }
+  #banner { position: absolute; inset: auto 0 40% 0; text-align: center; font-size: 22px; color: #9dffc0; text-shadow: 0 0 8px #000; }
+  #hud { white-space: pre; min-height: 1.5em; color: #8f8a80; }
+  kbd { border: 1px solid #39352f; padding: 0 4px; }
+  select { font: inherit; background: #15140f; color: inherit; border: 1px solid #39352f; }
+</style>
+</head>
+<body>
+<main>
+  <div class="stage"><canvas id="view"></canvas><div id="banner" hidden></div></div>
+  <div id="hud">loading wasm...</div>
+  <div>
+    <kbd>W</kbd><kbd>S</kbd> move &nbsp; <kbd>A</kbd><kbd>D</kbd> strafe &nbsp; <kbd>Q</kbd><kbd>E</kbd>/arrows turn &nbsp; click for mouse look &nbsp; <kbd>Shift</kbd> run &nbsp;
+    toggles: <kbd>M</kbd> minimap <kbd>L</kbd> lighting <kbd>F</kbd> fog <kbd>T</kbd> torch <kbd>X</kbd> textures &nbsp; <kbd>N</kbd> new maze &nbsp;
+    resolution <select id="res"><option>320x180</option><option>480x270</option><option>640x360</option><option>960x540</option></select>
+    &nbsp; find the green portal.
+  </div>
+</main>
+<script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tiny-ecs-engine: arena demo</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #07080a; color: #c9d1d9; font: 13px/1.5 ui-monospace, Consolas, monospace; }
+  main { max-width: 1280px; margin: 0 auto; padding: 12px; }
+  canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #0b0d10; border: 1px solid #222831; cursor: crosshair; }
+  #hud { white-space: pre; min-height: 4.5em; margin: 8px 0; }
+  kbd { border: 1px solid #333a44; padding: 0 4px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <canvas id="view" width="1280" height="720"></canvas>
+  <div id="hud">loading...</div>
+  <div>
+    <kbd>W</kbd>/<kbd>&uarr;</kbd> thrust &nbsp; <kbd>A</kbd><kbd>D</kbd>/<kbd>&larr;</kbd><kbd>&rarr;</kbd> turn &nbsp;
+    mouse aims &nbsp; <kbd>Space</kbd>/click fire &nbsp;
+    <kbd>1</kbd>-<kbd>4</kbd> asteroid target (120 / 460 / 900 / 2400) &nbsp;
+    <kbd>H</kbd> hitboxes + grid &nbsp; <kbd>P</kbd> pause &nbsp; <kbd>R</kbd> restart
+  </div>
+</main>
+<script type="module" src="dist/demo/main.js"></script>
+</body>
+</html>

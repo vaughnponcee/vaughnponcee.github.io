@@ -51,20 +51,25 @@ h1{margin:0 0 34px;font-family:"Arial Black","Segoe UI Black","Helvetica Neue",I
 
 
 section{padding-bottom:140px}
-h2{margin:0 0 6px;font-size:28px;font-weight:600;letter-spacing:-.01em}
+h2{margin:0 0 28px;font-size:28px;font-weight:600;letter-spacing:-.01em}
 .sub{margin:0 0 36px;color:var(--mute);font-size:15.5px}
 
 .shots{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px 24px}
-.shots a:first-child{grid-row:span 2}
-.shots a:first-child .img{aspect-ratio:auto;height:calc(100% - 52px)}
-.shots a:first-child b{font-size:17px}
-.shots a{text-decoration:none;display:block}
+.shots .tile:first-child{grid-row:span 2}
+.shots .tile:first-child{display:flex;flex-direction:column}
+.shots .tile:first-child .cover{flex:1;display:flex;flex-direction:column}
+.shots .tile:first-child .img{aspect-ratio:auto;flex:1;min-height:260px}
+.shots .tile:first-child b{font-size:17px}
+.shots .tile{display:block}
+.shots .cover{text-decoration:none;display:block}
+.shots .tile > span a{color:var(--ink)}
+.badge{position:absolute;left:12px;top:12px;background:var(--bg);color:var(--ink);font-size:12.5px;font-weight:600;padding:3px 10px;border-radius:999px;opacity:.92}
 .shots .img{border:1px solid var(--line);border-radius:12px;overflow:hidden;aspect-ratio:16/10;background:var(--soft)}
 .shots img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
-.shots a:hover img{transform:scale(1.03)}
+.shots .tile:hover img{transform:scale(1.03)}
 .shots .px{image-rendering:pixelated}
-.shots b{display:block;font-size:15px;font-weight:600;margin-top:14px}
-.shots span{font-size:14px;color:var(--mute)}
+.shots .tile b{display:block;font-size:15px;font-weight:600;margin-top:14px}
+.shots .tile > span{font-size:14px;color:var(--mute)}
 
 .tabs{display:flex;flex-wrap:wrap;gap:8px 26px;border-bottom:1px solid var(--line);margin-bottom:32px}
 .tabs button{background:none;border:0;padding:0 0 10px;font:inherit;font-size:15px;color:var(--mute);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
@@ -90,8 +95,8 @@ footer a:hover{color:var(--ink)}
 
 .fade{opacity:0;transform:translateY(10px);transition:opacity .7s ease,transform .7s ease}
 .fade.in{opacity:1;transform:none}
-@media (max-width:900px){.top{grid-template-columns:1fr;gap:40px}.stats{grid-template-columns:repeat(3,1fr);border-left:0;padding:0}.stats b{font-size:28px}.shots{grid-template-columns:1fr 1fr}.shots a:first-child{grid-row:auto;grid-column:span 2}.shots a:first-child .img{aspect-ratio:16/9;height:auto}.list{grid-template-columns:1fr 1fr}}
-@media (max-width:600px){.shots a:first-child{grid-column:auto}.top{padding:56px 0 64px;margin-bottom:72px}section{padding-bottom:96px}.stats{grid-template-columns:1fr 1fr 1fr}.shots,.list{grid-template-columns:1fr}.stats b{font-size:24px}footer a{margin:0 16px 0 0}}
+@media (max-width:900px){.top{grid-template-columns:1fr;gap:40px}.stats{grid-template-columns:repeat(3,1fr);border-left:0;padding:0}.stats b{font-size:28px}.shots{grid-template-columns:1fr 1fr}.shots .tile:first-child{grid-row:auto;grid-column:span 2}.shots .tile:first-child .img{aspect-ratio:16/9;height:auto}.list{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.shots .tile:first-child{grid-column:auto}.top{padding:56px 0 64px;margin-bottom:72px}section{padding-bottom:96px}.stats{grid-template-columns:1fr 1fr 1fr}.shots,.list{grid-template-columns:1fr}.stats b{font-size:24px}footer a{margin:0 16px 0 0}}
 @media (prefers-reduced-motion:reduce){.fade{opacity:1;transform:none;transition:none}.shots img,.item::after{transition:none}}
 </style>
 </head>
@@ -117,13 +122,12 @@ footer a:hover{color:var(--ink)}
 
 <section class="fade">
   <h2>Featured</h2>
-  <p class="sub">Screenshots from the running builds.</p>
   <div class="shots">
-    <a href="https://github.com/vaughnponcee/ember/releases/latest"><div class="img"><img src="assets/ember.png" alt="Crystal Run: an orange ball on a green arena with crates, glowing crystals and a stepped tower" loading="lazy"></div><b>ember &middot; download for Windows</b><span>3D and 2D engine with an editor, sprite animator and scripting</span></a>
-    <a href="https://github.com/vaughnponcee/raycast-rs"><div class="img"><img src="assets/raycast.png" alt="Textured maze with lamps and a green portal" loading="lazy"></div><b>raycast-rs</b><span>Software raycaster compiled to WebAssembly</span></a>
-    <a href="https://github.com/vaughnponcee/terra-gen"><div class="img"><img class="px" src="assets/terrain.png" alt="Eroded island terrain" loading="lazy"></div><b>terra-gen</b><span>Procedural terrain with erosion</span></a>
-    <a href="https://github.com/vaughnponcee/tiny-ecs-engine"><div class="img"><img src="assets/ecs.png" alt="Arena shooter with hundreds of asteroids" loading="lazy"></div><b>tiny-ecs-engine</b><span>ECS powering a 543 entity shooter</span></a>
-    <a href="https://github.com/vaughnponcee/tick-net"><div class="img"><img src="assets/ticknet.png" alt="Raw versus predicted movement" loading="lazy"></div><b>tick-net</b><span>Multiplayer netcode with prediction</span></a>
+    <div class="tile"><a class="cover" href="play/moss/"><div class="img"><img class="px" src="assets/moss.png" alt="Moss Ledge: a pixel-art hero on grassy ledges with coins and spikes" loading="lazy"><span class="badge">Play</span></div><b>ember</b></a><span>3D and 2D engine with an editor. Play the 2D demo, or <a href="https://github.com/vaughnponcee/ember/releases/latest">download for Windows</a></span></div>
+    <div class="tile"><a class="cover" href="play/raycast/"><div class="img"><img src="assets/raycast.png" alt="Textured maze with lamps and a green portal" loading="lazy"><span class="badge">Play</span></div><b>raycast-rs</b></a><span>Walk the maze: WASD, mouse to look</span></div>
+    <div class="tile"><a class="cover" href="play/terrain/"><div class="img"><img class="px" src="assets/terrain.png" alt="Eroded island terrain" loading="lazy"><span class="badge">Play</span></div><b>terra-gen</b></a><span>Generate islands with your own settings</span></div>
+    <div class="tile"><a class="cover" href="play/ecs/"><div class="img"><img src="assets/ecs.png" alt="Arena shooter with hundreds of asteroids" loading="lazy"><span class="badge">Play</span></div><b>tiny-ecs-engine</b></a><span>Arena shooter on a hand-rolled ECS</span></div>
+    <div class="tile"><a class="cover" href="play/ticknet/"><div class="img"><img src="assets/ticknet.png" alt="Raw versus predicted movement" loading="lazy"><span class="badge">Play</span></div><b>tick-net</b></a><span>Move through a laggy link, with and without prediction</span></div>
   </div>
 </section>
 
